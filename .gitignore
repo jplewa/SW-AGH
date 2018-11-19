@@ -52,4 +52,11 @@ Mkfile.old
 dkms.conf
 
 *.json
+*.xml
 make_local.bat
+*.lst
+.cproject
+.project
+*.bin
+
+.fuse_hidden*

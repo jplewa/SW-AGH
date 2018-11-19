@@ -83,7 +83,7 @@
 #include "wm8994/wm8994.h"
 
 
-
+#include "pub/mp3dec.h"
 
 /* USER CODE END Includes */
 
@@ -1644,9 +1644,11 @@ void StartDefaultTask(void const * argument)
 	  vTaskDelay(250);
   }while(Appli_state != APPLICATION_READY);
   
+  MP3InitDecoder();
+
   FRESULT res;
   
-  res = f_open(&file,"1:/plik.wav",FA_READ);
+  res = f_open(&file,"1:/test_1k.wav",FA_READ);
   
   if(res==FR_OK)
   {

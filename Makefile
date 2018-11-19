@@ -36,6 +36,8 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
+Helix/mp3dec.c \
+Helix/real/buffers.c \
 Src/main.c \
 Src/bsp_driver_sd.c \
 Src/sd_diskio.c \
@@ -187,7 +189,6 @@ Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc.c \
 Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_bot.c \
 Middlewares/ST/STM32_USB_Host_Library/Class/MSC/Src/usbh_msc_scsi.c
 
-
 PROJECT_SRC = \
 Src/dbgu.c \
 Src/term_io.c \
@@ -209,7 +210,9 @@ startup_stm32f746xx.s
 #######################################
 # binaries
 #######################################
-PREFIX = arm-none-eabi-
+
+GCC_PATH=/home/julia/opt/gnu-mcu-eclipse/arm-none-eabi-gcc/7.3.1-1.1-20180724-0637/bin
+PREFIX=arm-none-eabi-
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
 ifdef GCC_PATH
@@ -230,7 +233,7 @@ BIN = $(CP) -O binary -S
 # CFLAGS
 #######################################
 # cpu
-CPU = -mcpu=cortex-m7
+CPU = -mcpu=cortex-m7 
 
 # fpu
 FPU = -mfpu=fpv5-sp-d16
@@ -248,7 +251,8 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F746xx
+-DSTM32F746xx \
+-DARM_ADS
 
 
 # AS includes
@@ -281,7 +285,8 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/LwIP/src/include/posix \
 -IMiddlewares/Third_Party/LwIP/src/include/posix/sys \
 -IMiddlewares/Third_Party/LwIP/system/arch \
--IDrivers/CMSIS/Include
+-IDrivers/CMSIS/Include \
+-IHelix \
 
 
 # compile gcc flags
@@ -295,7 +300,7 @@ endif
 
 
 # Generate dependency information
-CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)" -std=gnu99
 
 
 #######################################
@@ -305,7 +310,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 LDSCRIPT = STM32F746NGHx_FLASH.ld
 
 # libraries
-LIBS = -lc -lm -lnosys 
+LIBS = -lc -lm -lnosys
 LIBDIR = 
 LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
