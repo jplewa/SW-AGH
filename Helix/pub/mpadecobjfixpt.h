@@ -103,6 +103,7 @@ private:
 	MP3FrameInfo		m_lastMP3FrameInfo;
 	unsigned char		m_bUseFrameSize;
         unsigned char           m_bTrustPackets;
+        int                     decoder_state;
 };
 
 #endif	/* _MPADECOBJFIXPT_H_ */

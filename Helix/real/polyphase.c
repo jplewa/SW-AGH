@@ -123,17 +123,8 @@ void PolyphaseMono(short *pcm, int *vbuf, const int *coefBase)
 	coef = coefBase;
 	vb1 = vbuf;
 	sum1L = rndVal;
-	
-	c1 = *coef;
-	coef++;
-	c2 = *coef;
-	coef++;
-	vLo = *(vb1+(0));
-	vHi = *(vb1+(23-(0)));
-	sum1L = MADD64(sum1L, vLo,  c1);
-	sum1L = MADD64(sum1L, vHi, -c2);
-	
-	//MC0M(0) // a
+
+	MC0M(0)
 	MC0M(1)
 	MC0M(2)
 	MC0M(3)

@@ -41,8 +41,6 @@
  * trigtabs.c - global ROM tables for pre-calculated trig coefficients
  **************************************************************************************/
 
-// constants in RAM are not significantly faster
-
 #include "coder.h"
 
 /* post-IMDCT window, win[blockType][i]

@@ -43,8 +43,6 @@
 
 #include "coder.h"
 
-#include <stdio.h>
-
 /* helper macros - see comments in hufftabs.c about the format of the huffman tables */
 #define GetMaxbits(x)   ((int)( (((unsigned short)(x)) >>  0) & 0x000f))
 #define GetHLen(x)      ((int)( (((unsigned short)(x)) >> 12) & 0x000f))
@@ -81,7 +79,6 @@
  *              si_huff.bit tests every Huffman codeword in every table (though not
  *                necessarily all linBits outputs for x,y > 15)
  **************************************************************************************/
-// no improvement with section=data
 static int DecodeHuffmanPairs(int *xy, int nVals, int tabIdx, int bitsLeft, unsigned char *buf, int bitOffset)
 {
 	int i, x, y;
@@ -285,7 +282,6 @@ static int DecodeHuffmanPairs(int *xy, int nVals, int tabIdx, int bitsLeft, unsi
  * 
  * Notes:        si_huff.bit tests every vwxy output in both quad tables
  **************************************************************************************/
-// no improvement with section=data
 static int DecodeHuffmanQuads(int *vwxy, int nVals, int tabIdx, int bitsLeft, unsigned char *buf, int bitOffset)
 {
 	int i, v, w, x, y;
@@ -378,7 +374,6 @@ static int DecodeHuffmanQuads(int *vwxy, int nVals, int tabIdx, int bitsLeft, un
  *              -1 if null input pointers, huffBlockBits < 0, or decoder runs 
  *                out of bits prematurely (invalid bitstream)
  **************************************************************************************/
-// .data about 1ms faster per frame
 int DecodeHuffman(MP3DecInfo *mp3DecInfo, unsigned char *buf, int *bitOffset, int huffBlockBits, int gr, int ch)
 {
 	int r1Start, r2Start, rEnd[4];	/* region boundaries */
@@ -449,9 +444,8 @@ int DecodeHuffman(MP3DecInfo *mp3DecInfo, unsigned char *buf, int *bitOffset, in
 	hi->nonZeroBound[ch] += DecodeHuffmanQuads(hi->huffDecBuf[ch] + rEnd[3], MAX_NSAMP - rEnd[3], sis->count1TableSelect, bitsLeft, buf, *bitOffset);
 
 	ASSERT(hi->nonZeroBound[ch] <= MAX_NSAMP);
-	for (i = hi->nonZeroBound[ch]; i < MAX_NSAMP; i++) {
+	for (i = hi->nonZeroBound[ch]; i < MAX_NSAMP; i++)
 		hi->huffDecBuf[ch][i] = 0;
-	}
 	
 	/* If bits used for 576 samples < huffBlockBits, then the extras are considered
 	 *  to be stuffing bits (throw away, but need to return correct bitstream position) 

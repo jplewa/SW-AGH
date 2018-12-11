@@ -129,7 +129,7 @@ static const int pow2frac[8] = {
  *
  * Return:      bitwise-OR of the unsigned outputs (for guard bit calculations)
  **************************************************************************************/
-/*__attribute__ ((section (".data")))*/ static int DequantBlock(int *inbuf, int *outbuf, int num, int scale)
+static int DequantBlock(int *inbuf, int *outbuf, int num, int scale)
 {
 	int tab4[4];
 	int scalef, scalei, shift;
@@ -241,7 +241,7 @@ static const int pow2frac[8] = {
  *
  * Notes:       dequantized samples in Q(DQ_FRACBITS_OUT) format 
  **************************************************************************************/
-/*__attribute__ ((section (".data")))*/ int DequantChannel(int *sampleBuf, int *workBuf, int *nonZeroBound, FrameHeader *fh, SideInfoSub *sis, 
+int DequantChannel(int *sampleBuf, int *workBuf, int *nonZeroBound, FrameHeader *fh, SideInfoSub *sis, 
 					ScaleFactorInfoSub *sfis, CriticalBandInfo *cbi)
 {
 	int i, j, w, cb;
@@ -312,7 +312,7 @@ static const int pow2frac[8] = {
 	cbi->cbEndL  = cbMax[0];
 	cbi->cbEndS[0] = cbi->cbEndS[1] = cbi->cbEndS[2] = 0;
 	cbi->cbEndSMax = 0;
-	
+
 	/* early exit if no short blocks */
 	if (cbStartS >= 12) 
 		return CLZ(gbMask) - 1;

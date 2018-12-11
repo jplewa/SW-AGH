@@ -38,6 +38,19 @@ BUILD_DIR = build
 C_SOURCES =  \
 Helix/mp3dec.c \
 Helix/real/buffers.c \
+Helix/real/bitstream.c \
+Helix/mp3tabs.c \
+Helix/real/scalfact.c \
+Helix/real/huffman.c \
+Helix/real/hufftabs.c \
+Helix/real/dqchan.c \
+Helix/real/dequant.c \
+Helix/real/imdct.c \
+Helix/real/subband.c \
+Helix/real/dct32.c \
+Helix/real/polyphase.c \
+Helix/real/trigtabs.c \
+Helix/real/stproc.c \
 Src/main.c \
 Src/bsp_driver_sd.c \
 Src/sd_diskio.c \
@@ -252,8 +265,6 @@ AS_DEFS =
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
 -DSTM32F746xx \
--DARM_ADS
-
 
 # AS includes
 AS_INCLUDES =  \

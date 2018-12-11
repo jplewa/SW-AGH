@@ -55,8 +55,8 @@
 #include "usb_host.h"
 
 /* USER CODE BEGIN Includes */
-#include  <errno.h>
-#include  <sys/unistd.h>
+#include <errno.h>
+#include <sys/unistd.h>
 
 #include "stm32746g_discovery_lcd.h"
 #include "Utilities/Fonts/fonts.h"
@@ -82,8 +82,8 @@
 
 #include "wm8994/wm8994.h"
 
-
 #include "pub/mp3dec.h"
+#include "pub/mp3common.h"
 
 /* USER CODE END Includes */
 
@@ -151,6 +151,7 @@ static void MX_SAI2_Init(void);
 static void MX_SDMMC1_SD_Init(void);
 static void MX_SPDIFRX_Init(void);
 static void MX_SPI2_Init(void);
+
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
@@ -160,13 +161,10 @@ static void MX_TIM12_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_TIM7_Init(void);
-void StartDefaultTask(void const * argument);
+void StartDefaultTask(void const *argument);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-                                
-                                
-                                
-                                
+void draw_background();
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -174,70 +172,78 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-void mainTask(void* p);
+void mainTask(void *p);
 
 osThreadId netconn_thread_handle;
 
-#define LCD_X_SIZE			RK043FN48H_WIDTH
-#define LCD_Y_SIZE			RK043FN48H_HEIGHT
+#define BG_COLOR ((uint32_t)0xFF241593)
+#define OUTER_BUTTON_COLOR ((uint32_t)0xFF056CFF)
+#define OUTER_SHADE_COLOR ((uint32_t)0xFF1E3454)
+#define INNER_BUTTON_COLOR ((uint32_t)0xFF0805FF)
+#define INNER_SHADE_COLOR ((uint32_t)0xFF0F0E3B)
+#define LCD_X_SIZE RK043FN48H_WIDTH
+#define LCD_Y_SIZE RK043FN48H_HEIGHT
 
-#define PRINTF_USES_HAL_TX		0
+#define PRINTF_USES_HAL_TX 0
 
 int __io_putchar(int ch)
 {
-	uint8_t data = ch;
-	#if PRINTF_USES_HAL_TX
-		HAL_StatusTypeDef status = HAL_UART_Transmit(&huart1, (uint8_t*)&data, len, 100);	
-	#else
-		while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) == RESET) { ; }
-		huart1.Instance->TDR = (uint16_t)data;
-	#endif
-	return 0;
+  uint8_t data = ch;
+#if PRINTF_USES_HAL_TX
+  HAL_StatusTypeDef status = HAL_UART_Transmit(&huart1, (uint8_t *)&data, len, 100);
+#else
+  while (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) == RESET)
+  {
+    ;
+  }
+  huart1.Instance->TDR = (uint16_t)data;
+#endif
+  return 0;
 }
 
 char inkey(void)
 {
-	uint32_t flags = huart1.Instance->ISR;
-	
-	if((flags & UART_FLAG_RXNE) || (flags & UART_FLAG_ORE))
-	{
-		__HAL_UART_CLEAR_OREFLAG(&huart1);
-		return (huart1.Instance->RDR);
-	}
-	else
-		return 0;
+  uint32_t flags = huart1.Instance->ISR;
+
+  if ((flags & UART_FLAG_RXNE) || (flags & UART_FLAG_ORE))
+  {
+    __HAL_UART_CLEAR_OREFLAG(&huart1);
+    return (huart1.Instance->RDR);
+  }
+  else
+    return 0;
 }
 
 //partially based on available code examples
 static void lcd_start(void)
 {
-  /* LCD Initialization */ 
+  /* LCD Initialization */
   BSP_LCD_Init();
 
-  /* LCD Initialization */ 
+  /* LCD Initialization */
   BSP_LCD_LayerDefaultInit(0, (unsigned int)0xC0000000);
   //BSP_LCD_LayerDefaultInit(1, (unsigned int)lcd_image_bg+(LCD_X_SIZE*LCD_Y_SIZE*4));
-  BSP_LCD_LayerDefaultInit(1, (unsigned int)0xC0000000+(LCD_X_SIZE*LCD_Y_SIZE*4));
+  BSP_LCD_LayerDefaultInit(1, (unsigned int)0xC0000000 + (LCD_X_SIZE * LCD_Y_SIZE * 4));
 
-  /* Enable the LCD */ 
-  BSP_LCD_DisplayOn(); 
-  
+  /* Enable the LCD */
+  BSP_LCD_DisplayOn();
+
   /* Select the LCD Background Layer  */
   BSP_LCD_SelectLayer(0);
 
-  /* Clear the Background Layer */ 
+  /* Clear the Background Layer */
   BSP_LCD_Clear(LCD_COLOR_WHITE);
   BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-  
-  BSP_LCD_SetColorKeying(1,LCD_COLOR_WHITE);
-  
+
+  BSP_LCD_SetColorKeying(1, LCD_COLOR_WHITE);
+
   /* Select the LCD Foreground Layer  */
   BSP_LCD_SelectLayer(1);
 
-  /* Clear the Foreground Layer */ 
+  /* Clear the Foreground Layer */
   BSP_LCD_Clear(LCD_COLOR_WHITE);
   BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-  
+
   /* Configure the transparency for foreground and background :
      Increase the transparency */
   BSP_LCD_SetTransparency(0, 255);
@@ -245,9 +251,10 @@ static void lcd_start(void)
 }
 
 //[rmv]
+/*
 void draw_background(void)
 {
-	/* Select the LCD Background Layer  */
+	//Select the LCD Background Layer 
 	BSP_LCD_SelectLayer(0);
 	BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
 	BSP_LCD_FillRect(0.4*LCD_X_SIZE,0.2*LCD_Y_SIZE,150,130);
@@ -255,19 +262,164 @@ void draw_background(void)
 	//select Foreground Layer
 	BSP_LCD_SelectLayer(1);
 }
+*/
 
-static TS_StateTypeDef  TS_State;
+Point points[10];
 
+void draw_play_button()
+{
+
+  BSP_LCD_SelectLayer(0);
+
+  BSP_LCD_SetTextColor(OUTER_BUTTON_COLOR);
+  BSP_LCD_FillCircle(LCD_X_SIZE / 2, LCD_Y_SIZE / 2, 50);
+
+  BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
+  points[0].X = LCD_X_SIZE / 2 - 23;
+  points[0].Y = LCD_Y_SIZE / 2 - 28;
+  points[1].X = LCD_X_SIZE / 2 - 23;
+  points[1].Y = LCD_Y_SIZE / 2 + 28;
+  points[2].X = LCD_X_SIZE / 2 + 28;
+  points[2].Y = LCD_Y_SIZE / 2;
+  BSP_LCD_FillPolygon(points, 3);
+
+  BSP_LCD_SetTextColor(INNER_BUTTON_COLOR);
+  points[0].X = LCD_X_SIZE / 2 - 20;
+  points[0].Y = LCD_Y_SIZE / 2 - 25;
+  points[1].X = LCD_X_SIZE / 2 - 20;
+  points[1].Y = LCD_Y_SIZE / 2 + 25;
+  points[2].X = LCD_X_SIZE / 2 + 25;
+  points[2].Y = LCD_Y_SIZE / 2;
+  BSP_LCD_FillPolygon(points, 3);
+}
+
+void draw_stop_button()
+{
+
+  BSP_LCD_SelectLayer(0);
+
+  BSP_LCD_SetTextColor(OUTER_BUTTON_COLOR);
+  BSP_LCD_FillCircle(LCD_X_SIZE / 2, LCD_Y_SIZE / 2, 50);
+
+  BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
+  BSP_LCD_FillRect(212, 108, 56, 56);
+
+  BSP_LCD_SetTextColor(INNER_BUTTON_COLOR);
+  BSP_LCD_FillRect(213, 109, 54, 54);
+
+  BSP_LCD_SelectLayer(1);
+}
+
+// size 480 x 272 px
+void draw_background()
+{
+
+  // Select the LCD Background Layer
+  BSP_LCD_SelectLayer(0);
+  BSP_LCD_Clear(BG_COLOR);
+  BSP_LCD_SetBackColor(BG_COLOR);
+
+  // draw outer shades
+  BSP_LCD_SetTextColor(OUTER_SHADE_COLOR);
+  BSP_LCD_FillCircle(LCD_X_SIZE / 2, LCD_Y_SIZE / 2, 53);       // play
+  BSP_LCD_FillCircle(LCD_X_SIZE / 2 - 105, LCD_Y_SIZE / 2, 42); // previous
+  BSP_LCD_FillCircle(LCD_X_SIZE / 2 + 105, LCD_Y_SIZE / 2, 42); // next
+
+  // draw buttons
+  BSP_LCD_SetTextColor(OUTER_BUTTON_COLOR);
+  BSP_LCD_FillCircle(LCD_X_SIZE / 2 - 105, LCD_Y_SIZE / 2, 40); // previous
+  BSP_LCD_FillCircle(LCD_X_SIZE / 2 + 105, LCD_Y_SIZE / 2, 40); // next
+
+  // "next" figure
+  BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
+  points[0].X = LCD_X_SIZE / 2 + 105 - 23;
+  points[0].Y = LCD_Y_SIZE / 2 - 19;
+  points[1].X = LCD_X_SIZE / 2 + 105 - 3;
+  points[1].Y = LCD_Y_SIZE / 2 - 8;
+  points[2].X = LCD_X_SIZE / 2 + 105 - 3;
+  points[2].Y = LCD_Y_SIZE / 2 - 19;
+  points[3].X = LCD_X_SIZE / 2 + 105 + 31;
+  points[3].Y = LCD_Y_SIZE / 2;
+  points[4].X = LCD_X_SIZE / 2 + 105 - 3;
+  points[4].Y = LCD_Y_SIZE / 2 + 19;
+  points[5].X = LCD_X_SIZE / 2 + 105 - 3;
+  points[5].Y = LCD_Y_SIZE / 2 + 8;
+  points[6].X = LCD_X_SIZE / 2 + 105 - 23;
+  points[6].Y = LCD_Y_SIZE / 2 + 19;
+  BSP_LCD_FillPolygon(points, 7);
+  BSP_LCD_SetTextColor(INNER_BUTTON_COLOR);
+  points[0].X = LCD_X_SIZE / 2 + 105 - 22;
+  points[0].Y = LCD_Y_SIZE / 2 - 18;
+  points[1].X = LCD_X_SIZE / 2 + 105 - 2;
+  points[1].Y = LCD_Y_SIZE / 2 - 7;
+  points[2].X = LCD_X_SIZE / 2 + 105 - 2;
+  points[2].Y = LCD_Y_SIZE / 2 - 18;
+  points[3].X = LCD_X_SIZE / 2 + 105 + 30;
+  points[3].Y = LCD_Y_SIZE / 2;
+  points[4].X = LCD_X_SIZE / 2 + 105 - 2;
+  points[4].Y = LCD_Y_SIZE / 2 + 18;
+  points[5].X = LCD_X_SIZE / 2 + 105 - 2;
+  points[5].Y = LCD_Y_SIZE / 2 + 7;
+  points[6].X = LCD_X_SIZE / 2 + 105 - 22;
+  points[6].Y = LCD_Y_SIZE / 2 + 18;
+  BSP_LCD_FillPolygon(points, 7);
+
+  // "previous" figure
+  BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
+  points[0].X = LCD_X_SIZE / 2 - 105 + 23;
+  points[0].Y = LCD_Y_SIZE / 2 - 19;
+  points[1].X = LCD_X_SIZE / 2 - 105 + 3;
+  points[1].Y = LCD_Y_SIZE / 2 - 8;
+  points[2].X = LCD_X_SIZE / 2 - 105 + 3;
+  points[2].Y = LCD_Y_SIZE / 2 - 19;
+  points[3].X = LCD_X_SIZE / 2 - 105 - 31;
+  points[3].Y = LCD_Y_SIZE / 2;
+  points[4].X = LCD_X_SIZE / 2 - 105 + 3;
+  points[4].Y = LCD_Y_SIZE / 2 + 19;
+  points[5].X = LCD_X_SIZE / 2 - 105 + 3;
+  points[5].Y = LCD_Y_SIZE / 2 + 8;
+  points[6].X = LCD_X_SIZE / 2 - 105 + 23;
+  points[6].Y = LCD_Y_SIZE / 2 + 19;
+  BSP_LCD_FillPolygon(points, 7);
+  BSP_LCD_SetTextColor(INNER_BUTTON_COLOR);
+  points[0].X = LCD_X_SIZE / 2 - 105 + 22;
+  points[0].Y = LCD_Y_SIZE / 2 - 18;
+  points[1].X = LCD_X_SIZE / 2 - 105 + 2;
+  points[1].Y = LCD_Y_SIZE / 2 - 7;
+  points[2].X = LCD_X_SIZE / 2 - 105 + 2;
+  points[2].Y = LCD_Y_SIZE / 2 - 18;
+  points[3].X = LCD_X_SIZE / 2 - 105 - 30;
+  points[3].Y = LCD_Y_SIZE / 2;
+  points[4].X = LCD_X_SIZE / 2 - 105 + 2;
+  points[4].Y = LCD_Y_SIZE / 2 + 18;
+  points[5].X = LCD_X_SIZE / 2 - 105 + 2;
+  points[5].Y = LCD_Y_SIZE / 2 + 7;
+  points[6].X = LCD_X_SIZE / 2 - 105 + 22;
+  points[6].Y = LCD_Y_SIZE / 2 + 18;
+  BSP_LCD_FillPolygon(points, 7);
+
+  // swapping play/stop?
+  draw_play_button();
+}
+
+void draw_title(uint8_t *title)
+{
+
+  BSP_LCD_SelectLayer(0);
+  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+  BSP_LCD_DisplayStringAt(LCD_X_SIZE / 2, LCD_Y_SIZE / 2 + 53 + 20, title, CENTER_MODE);
+}
+
+static TS_StateTypeDef TS_State;
 
 int initialize_touchscreen(void)
 {
-	uint8_t  status = 0;
-	status = BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
-	if(status != TS_OK) return -1;
-	return 0;
+  uint8_t status = 0;
+  status = BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
+  if (status != TS_OK)
+    return -1;
+  return 0;
 }
-
-
 
 /* USER CODE END 0 */
 
@@ -330,10 +482,6 @@ int main(void)
 
   printf("Regular printf\n");
 
-lcd_start();
-draw_background();
-initialize_touchscreen();
-
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -360,11 +508,10 @@ initialize_touchscreen();
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
- 
 
   /* Start scheduler */
   osKernelStart();
-  
+
   /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
@@ -372,13 +519,11 @@ initialize_touchscreen();
   while (1)
   {
 
-  /* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-  /* USER CODE BEGIN 3 */
-
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
-
 }
 
 /**
@@ -392,15 +537,15 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct;
 
-    /**Configure the main internal regulator output voltage 
+  /**Configure the main internal regulator output voltage 
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+  /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI | RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -414,17 +559,16 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Activate the Over-Drive mode 
+  /**Activate the Over-Drive mode 
     */
   if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+  /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
@@ -435,11 +579,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPDIFRX|RCC_PERIPHCLK_LTDC
-                              |RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_USART1
-                              |RCC_PERIPHCLK_USART6|RCC_PERIPHCLK_SAI2
-                              |RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C3
-                              |RCC_PERIPHCLK_SDMMC1|RCC_PERIPHCLK_CLK48;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPDIFRX | RCC_PERIPHCLK_LTDC | RCC_PERIPHCLK_RTC | RCC_PERIPHCLK_USART1 | RCC_PERIPHCLK_USART6 | RCC_PERIPHCLK_SAI2 | RCC_PERIPHCLK_I2C1 | RCC_PERIPHCLK_I2C3 | RCC_PERIPHCLK_SDMMC1 | RCC_PERIPHCLK_CLK48;
   PeriphClkInitStruct.PLLI2S.PLLI2SN = 100;
   PeriphClkInitStruct.PLLI2S.PLLI2SP = RCC_PLLP_DIV2;
   PeriphClkInitStruct.PLLI2S.PLLI2SR = 2;
@@ -464,11 +604,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time 
+  /**Configure the Systick interrupt time 
     */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / 1000);
 
-    /**Configure the Systick 
+  /**Configure the Systick 
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -482,7 +622,7 @@ static void MX_ADC3_Init(void)
 
   ADC_ChannelConfTypeDef sConfig;
 
-    /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
+  /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
     */
   hadc3.Instance = ADC3;
   hadc3.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
@@ -501,7 +641,7 @@ static void MX_ADC3_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+  /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
     */
   sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = ADC_REGULAR_RANK_1;
@@ -510,7 +650,6 @@ static void MX_ADC3_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* CRC init function */
@@ -527,7 +666,6 @@ static void MX_CRC_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* DCMI init function */
@@ -550,7 +688,6 @@ static void MX_DCMI_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* DMA2D init function */
@@ -574,7 +711,6 @@ static void MX_DMA2D_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* I2C1 init function */
@@ -595,20 +731,19 @@ static void MX_I2C1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure Analogue filter 
+  /**Configure Analogue filter 
     */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure Digital filter 
+  /**Configure Digital filter 
     */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* I2C3 init function */
@@ -629,20 +764,19 @@ static void MX_I2C3_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure Analogue filter 
+  /**Configure Analogue filter 
     */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c3, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure Digital filter 
+  /**Configure Digital filter 
     */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c3, 0) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* LTDC init function */
@@ -691,7 +825,6 @@ static void MX_LTDC_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* QUADSPI init function */
@@ -712,7 +845,6 @@ static void MX_QUADSPI_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* RTC init function */
@@ -731,7 +863,7 @@ static void MX_RTC_Init(void)
 
   /* USER CODE END RTC_Init 1 */
 
-    /**Initialize RTC Only 
+  /**Initialize RTC Only 
     */
   hrtc.Instance = RTC;
   hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
@@ -745,7 +877,7 @@ static void MX_RTC_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initialize RTC and set the Time and Date 
+  /**Initialize RTC and set the Time and Date 
     */
   sTime.Hours = 0x0;
   sTime.Minutes = 0x0;
@@ -767,7 +899,7 @@ static void MX_RTC_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Enable the Alarm A 
+  /**Enable the Alarm A 
     */
   sAlarm.AlarmTime.Hours = 0x0;
   sAlarm.AlarmTime.Minutes = 0x0;
@@ -785,7 +917,7 @@ static void MX_RTC_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Enable the Alarm B 
+  /**Enable the Alarm B 
     */
   sAlarm.AlarmDateWeekDay = 0x1;
   sAlarm.Alarm = RTC_ALARM_B;
@@ -794,13 +926,12 @@ static void MX_RTC_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Enable the TimeStamp 
+  /**Enable the TimeStamp 
     */
   if (HAL_RTCEx_SetTimeStamp(&hrtc, RTC_TIMESTAMPEDGE_RISING, RTC_TIMESTAMPPIN_POS1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* SAI2 init function */
@@ -862,7 +993,6 @@ static void MX_SAI2_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* SDMMC1 init function */
@@ -876,7 +1006,6 @@ static void MX_SDMMC1_SD_Init(void)
   hsd1.Init.BusWide = SDMMC_BUS_WIDE_1B;
   hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
   hsd1.Init.ClockDiv = 0;
-
 }
 
 /* SPDIFRX init function */
@@ -898,7 +1027,6 @@ static void MX_SPDIFRX_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* SPI2 init function */
@@ -924,7 +1052,6 @@ static void MX_SPI2_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* TIM1 init function */
@@ -996,7 +1123,6 @@ static void MX_TIM1_Init(void)
   }
 
   HAL_TIM_MspPostInit(&htim1);
-
 }
 
 /* TIM2 init function */
@@ -1046,7 +1172,6 @@ static void MX_TIM2_Init(void)
   }
 
   HAL_TIM_MspPostInit(&htim2);
-
 }
 
 /* TIM3 init function */
@@ -1096,7 +1221,6 @@ static void MX_TIM3_Init(void)
   }
 
   HAL_TIM_MspPostInit(&htim3);
-
 }
 
 /* TIM5 init function */
@@ -1146,7 +1270,6 @@ static void MX_TIM5_Init(void)
   }
 
   HAL_TIM_MspPostInit(&htim5);
-
 }
 
 /* TIM7 init function */
@@ -1171,7 +1294,6 @@ static void MX_TIM7_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* TIM8 init function */
@@ -1206,7 +1328,6 @@ static void MX_TIM8_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* TIM12 init function */
@@ -1236,7 +1357,6 @@ static void MX_TIM12_Init(void)
   }
 
   HAL_TIM_MspPostInit(&htim12);
-
 }
 
 /* USART1 init function */
@@ -1257,7 +1377,6 @@ static void MX_USART1_UART_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* USART6 init function */
@@ -1278,7 +1397,6 @@ static void MX_USART6_UART_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /* FMC initialization function */
@@ -1313,7 +1431,6 @@ static void MX_FMC_Init(void)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
-
 }
 
 /** Configure pins as 
@@ -1357,7 +1474,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(OTG_FS_PowerSwitchOn_GPIO_Port, OTG_FS_PowerSwitchOn_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOI, ARDUINO_D7_Pin|ARDUINO_D8_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOI, ARDUINO_D7_Pin | ARDUINO_D8_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_Port, LCD_BL_CTRL_Pin, GPIO_PIN_SET);
@@ -1369,7 +1486,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(DCMI_PWR_EN_GPIO_Port, DCMI_PWR_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, ARDUINO_D4_Pin|ARDUINO_D2_Pin|EXT_RST_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, ARDUINO_D4_Pin | ARDUINO_D2_Pin | EXT_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : OTG_HS_OverCurrent_Pin */
   GPIO_InitStruct.Pin = OTG_HS_OverCurrent_Pin;
@@ -1379,8 +1496,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : ULPI_D7_Pin ULPI_D6_Pin ULPI_D5_Pin ULPI_D3_Pin 
                            ULPI_D2_Pin ULPI_D1_Pin ULPI_D4_Pin */
-  GPIO_InitStruct.Pin = ULPI_D7_Pin|ULPI_D6_Pin|ULPI_D5_Pin|ULPI_D3_Pin 
-                          |ULPI_D2_Pin|ULPI_D1_Pin|ULPI_D4_Pin;
+  GPIO_InitStruct.Pin = ULPI_D7_Pin | ULPI_D6_Pin | ULPI_D5_Pin | ULPI_D3_Pin | ULPI_D2_Pin | ULPI_D1_Pin | ULPI_D4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -1407,7 +1523,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(OTG_FS_PowerSwitchOn_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ARDUINO_D7_Pin ARDUINO_D8_Pin LCD_DISP_Pin */
-  GPIO_InitStruct.Pin = ARDUINO_D7_Pin|ARDUINO_D8_Pin|LCD_DISP_Pin;
+  GPIO_InitStruct.Pin = ARDUINO_D7_Pin | ARDUINO_D8_Pin | LCD_DISP_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -1433,7 +1549,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(OTG_FS_OverCurrent_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : TP3_Pin NC2_Pin */
-  GPIO_InitStruct.Pin = TP3_Pin|NC2_Pin;
+  GPIO_InitStruct.Pin = TP3_Pin | NC2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
@@ -1460,14 +1576,14 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(ULPI_NXT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ARDUINO_D4_Pin ARDUINO_D2_Pin EXT_RST_Pin */
-  GPIO_InitStruct.Pin = ARDUINO_D4_Pin|ARDUINO_D2_Pin|EXT_RST_Pin;
+  GPIO_InitStruct.Pin = ARDUINO_D4_Pin | ARDUINO_D2_Pin | EXT_RST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ULPI_STP_Pin ULPI_DIR_Pin */
-  GPIO_InitStruct.Pin = ULPI_STP_Pin|ULPI_DIR_Pin;
+  GPIO_InitStruct.Pin = ULPI_STP_Pin | ULPI_DIR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -1481,95 +1597,93 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(RMII_RXER_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ULPI_CLK_Pin ULPI_D0_Pin */
-  GPIO_InitStruct.Pin = ULPI_CLK_Pin|ULPI_D0_Pin;
+  GPIO_InitStruct.Pin = ULPI_CLK_Pin | ULPI_D0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF10_OTG_HS;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
 }
 
 /* USER CODE BEGIN 4 */
 static char response[500];
 
 //based on available code examples
-static void http_server_serve(struct netconn *conn) 
+static void http_server_serve(struct netconn *conn)
 {
   struct netbuf *inbuf;
   err_t recv_err;
-  char* buf;
+  char *buf;
   u16_t buflen;
-  
+
   /* Read the data from the port, blocking if nothing yet there. 
    We assume the request (the part we care about) is in one netbuf */
   recv_err = netconn_recv(conn, &inbuf);
-  
+
   if (recv_err == ERR_OK)
   {
-    if (netconn_err(conn) == ERR_OK) 
+    if (netconn_err(conn) == ERR_OK)
     {
-      netbuf_data(inbuf, (void**)&buf, &buflen);
-    
+      netbuf_data(inbuf, (void **)&buf, &buflen);
+
       /* Is this an HTTP GET command? (only check the first 5 chars, since
       there are other formats for GET, and we're keeping it very simple )*/
-      if ((buflen >=5) && (strncmp(buf, "GET /", 5) == 0))
+      if ((buflen >= 5) && (strncmp(buf, "GET /", 5) == 0))
       {
-			response[0] = 0;
+        response[0] = 0;
 
-			strcpy(response, "HTTP/1.1 200 OK\r\n\
+        strcpy(response, "HTTP/1.1 200 OK\r\n\
 				Content-Type: text/html\r\n\
 				Connnection: close\r\n\r\n\
 				<!DOCTYPE HTML>\r\n");
 
-			#if 0
+#if 0
 			strcat(response,"<html>\r\n\
 			<meta http-equiv=\"refresh\" content=\"10\">");
-			#endif
+#endif
 
-			strcat(response,"<title>Prosta strona WWW</title>");
-			strcat(response,"<h1>H1 Header</h1>");
+        strcat(response, "<title>Prosta strona WWW</title>");
+        strcat(response, "<h1>H1 Header</h1>");
 
-			strcat(response,"A to jest tekst na stronie");
-          netconn_write(conn, response, sizeof(response), NETCONN_NOCOPY);
+        strcat(response, "A to jest tekst na stronie");
+        netconn_write(conn, response, sizeof(response), NETCONN_NOCOPY);
       }
     }
   }
   /* Close the connection (server closes in HTTP) */
   netconn_close(conn);
-  
+
   /* Delete the buffer (netconn_recv gives us ownership,
    so we have to make sure to deallocate the buffer) */
   netbuf_delete(inbuf);
 }
 
-
 //based on available code examples
 static void http_server_netconn_thread(void const *arg)
-{ 
+{
   struct netconn *conn, *newconn;
   err_t err, accept_err;
-  
+
   xprintf("http_server_netconn_thread\n");
-  
+
   /* Create a new TCP connection handle */
   conn = netconn_new(NETCONN_TCP);
-  
-  if (conn!= NULL)
+
+  if (conn != NULL)
   {
     /* Bind to port 80 (HTTP) with default IP address */
     err = netconn_bind(conn, NULL, 80);
-    
+
     if (err == ERR_OK)
     {
       /* Put the connection into LISTEN state */
       netconn_listen(conn);
-  
-      while(1) 
+
+      while (1)
       {
         /* accept any icoming connection */
         accept_err = netconn_accept(conn, &newconn);
-        if(accept_err == ERR_OK)
+        if (accept_err == ERR_OK)
         {
           /* serve connection */
           http_server_serve(newconn);
@@ -1582,33 +1696,212 @@ static void http_server_netconn_thread(void const *arg)
   }
 }
 
-#define AUDIO_OUT_BUFFER_SIZE                      8192
-enum {
-  BUFFER_OFFSET_NONE = 0,  
-  BUFFER_OFFSET_HALF,  
-  BUFFER_OFFSET_FULL,     
+static uint32_t Mp3ReadId3V2Text(FIL *pInFile, uint32_t unDataLen, char *pszBuffer, uint32_t unBufferSize)
+{
+  UINT unRead = 0;
+  BYTE byEncoding = 0;
+  if ((f_read(pInFile, &byEncoding, 1, &unRead) == FR_OK) && (unRead == 1))
+  {
+    unDataLen--;
+    if (unDataLen <= (unBufferSize - 1))
+    {
+      if ((f_read(pInFile, pszBuffer, unDataLen, &unRead) == FR_OK) ||
+          (unRead == unDataLen))
+      {
+        if (byEncoding == 0)
+        {
+          // ISO-8859-1 multibyte
+          // just add a terminating zero
+          pszBuffer[unDataLen] = 0;
+        }
+        else if (byEncoding == 1)
+        {
+          // UTF16LE unicode
+          uint32_t r = 0;
+          uint32_t w = 0;
+          if ((unDataLen > 2) && (pszBuffer[0] == 0xFF) && (pszBuffer[1] == 0xFE))
+          {
+            // ignore BOM, assume LE
+            r = 2;
+          }
+          for (; r < unDataLen; r += 2, w += 1)
+          {
+            // should be acceptable for 7 bit ascii
+            pszBuffer[w] = pszBuffer[r];
+          }
+          pszBuffer[w] = 0;
+        }
+      }
+      else
+      {
+        return 1;
+      }
+    }
+    else
+    {
+      // we won't read a partial text
+      if (f_lseek(pInFile, f_tell(pInFile) + unDataLen) != FR_OK)
+      {
+        return 1;
+      }
+    }
+  }
+  else
+  {
+    return 1;
+  }
+  return 0;
+}
+
+/*
+ * Taken from
+ * http://www.mikrocontroller.net/topic/252319
+ */
+static uint32_t Mp3ReadId3V2Tag(FIL *pInFile, char *pszArtist, uint32_t unArtistSize, char *pszTitle, uint32_t unTitleSize)
+{
+  pszArtist[0] = 0;
+  pszTitle[0] = 0;
+
+  BYTE id3hd[10];
+  UINT unRead = 0;
+  if ((f_read(pInFile, id3hd, 10, &unRead) != FR_OK) || (unRead != 10))
+  {
+    return 1;
+  }
+  else
+  {
+    uint32_t unSkip = 0;
+    if ((unRead == 10) &&
+        (id3hd[0] == 'I') &&
+        (id3hd[1] == 'D') &&
+        (id3hd[2] == '3'))
+    {
+      unSkip += 10;
+      unSkip = ((id3hd[6] & 0x7f) << 21) | ((id3hd[7] & 0x7f) << 14) | ((id3hd[8] & 0x7f) << 7) | (id3hd[9] & 0x7f);
+
+      // try to get some information from the tag
+      // skip the extended header, if present
+      uint8_t unVersion = id3hd[3];
+      if (id3hd[5] & 0x40)
+      {
+        BYTE exhd[4];
+        f_read(pInFile, exhd, 4, &unRead);
+        size_t unExHdrSkip = ((exhd[0] & 0x7f) << 21) | ((exhd[1] & 0x7f) << 14) | ((exhd[2] & 0x7f) << 7) | (exhd[3] & 0x7f);
+        unExHdrSkip -= 4;
+        if (f_lseek(pInFile, f_tell(pInFile) + unExHdrSkip) != FR_OK)
+        {
+          return 1;
+        }
+      }
+      uint32_t nFramesToRead = 2;
+      while (nFramesToRead > 0)
+      {
+        char frhd[10];
+        if ((f_read(pInFile, frhd, 10, &unRead) != FR_OK) || (unRead != 10))
+        {
+          return 1;
+        }
+        if ((frhd[0] == 0) || (strncmp(frhd, "3DI", 3) == 0))
+        {
+          break;
+        }
+        char szFrameId[5] = {0, 0, 0, 0, 0};
+        memcpy(szFrameId, frhd, 4);
+        uint32_t unFrameSize = 0;
+        uint32_t i = 0;
+        for (; i < 4; i++)
+        {
+          if (unVersion == 3)
+          {
+            // ID3v2.3
+            unFrameSize <<= 8;
+            unFrameSize += frhd[i + 4];
+          }
+          if (unVersion == 4)
+          {
+            // ID3v2.4
+            unFrameSize <<= 7;
+            unFrameSize += frhd[i + 4] & 0x7F;
+          }
+        }
+
+        if (strcmp(szFrameId, "TPE1") == 0)
+        {
+          // artist
+          if (Mp3ReadId3V2Text(pInFile, unFrameSize, pszArtist, unArtistSize) != 0)
+          {
+            break;
+          }
+          nFramesToRead--;
+        }
+        else if (strcmp(szFrameId, "TIT2") == 0)
+        {
+          // title
+          if (Mp3ReadId3V2Text(pInFile, unFrameSize, pszTitle, unTitleSize) != 0)
+          {
+            break;
+          }
+          nFramesToRead--;
+        }
+        else
+        {
+          if (f_lseek(pInFile, f_tell(pInFile) + unFrameSize) != FR_OK)
+          {
+            return 1;
+          }
+        }
+      }
+    }
+    if (f_lseek(pInFile, unSkip) != FR_OK)
+    {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+#define FILE_BUFFER_SIZE 8192 * 2
+char file_buff[FILE_BUFFER_SIZE];
+int bytesLeft = 0;
+char *file_buff_ptr;
+
+#define DMA_BUFFER_SIZE 8192
+char processing_buff[DMA_BUFFER_SIZE];    // short?
+char *processing_buff_ptr;
+int processing_buff_offs = 0;
+
+char dma_buff[DMA_BUFFER_SIZE];
+
+// ?
+//static uint32_t fpos = 0;
+
+enum
+{
+  BUFFER_OFFSET_NONE = 0,
+  BUFFER_OFFSET_HALF,
+  BUFFER_OFFSET_FULL,
 };
 
-uint8_t buff[AUDIO_OUT_BUFFER_SIZE];
 static FIL file;
 extern ApplicationTypeDef Appli_state;
 static uint8_t player_state = 0;
-static uint8_t buf_offs = BUFFER_OFFSET_NONE;
-static uint32_t fpos = 0;
+static uint8_t dma_buff_offs = BUFFER_OFFSET_NONE;
 
+static HMP3Decoder hMP3Decoder;
+static MP3FrameInfo mp3FrameInfo;
 
 void BSP_AUDIO_OUT_TransferComplete_CallBack(void)
 {
-    buf_offs = BUFFER_OFFSET_FULL;
+  dma_buff_offs = BUFFER_OFFSET_FULL;
 }
 
 void BSP_AUDIO_OUT_HalfTransfer_CallBack(void)
-{ 
-    buf_offs = BUFFER_OFFSET_HALF;
+{
+  dma_buff_offs = BUFFER_OFFSET_HALF;
 }
 
-
-
+// https://vectr.com/crossix/aGqzpq926
 
 /* USER CODE END 4 */
 
@@ -1619,8 +1912,12 @@ void BSP_AUDIO_OUT_HalfTransfer_CallBack(void)
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void const * argument)
+void StartDefaultTask(void const *argument)
 {
+  lcd_start();
+  draw_background();
+  initialize_touchscreen();
+
   /* init code for FATFS */
   MX_FATFS_Init();
 
@@ -1633,119 +1930,202 @@ void StartDefaultTask(void const * argument)
   /* USER CODE BEGIN 5 */
   //osThreadDef(netconn_thread, http_server_netconn_thread, osPriorityNormal, 0, 1024);
   //netconn_thread_handle = osThreadCreate(osThread(netconn_thread), NULL);
-  
+
   vTaskDelay(1000);
-  
+  //draw_background();
+
   xprintf("waiting for USB mass storage\n");
-  
+  MP3InitDecoder();
   do
   {
-	  xprintf(".");
-	  vTaskDelay(250);
-  }while(Appli_state != APPLICATION_READY);
-  
-  MP3InitDecoder();
+    xprintf(".");
+    vTaskDelay(250);
+  } while (Appli_state != APPLICATION_READY);
 
   FRESULT res;
-  
-  res = f_open(&file,"1:/test_1k.wav",FA_READ);
-  
-  if(res==FR_OK)
+
+  res = f_open(&file, "1:/test_1k.mp3", FA_READ);
+
+  if (res == FR_OK)
   {
-	  xprintf("wave file open OK\n");
+    xprintf("mp3 file open OK\n");
   }
   else
   {
-	  xprintf("wave file open ERROR, res = %d\n",res);
-	  while(1);
+    xprintf("mp3 file open ERROR, res = %d\n", res);
+    while (1)
+      ;
   }
-  
-  //workaround: use 22K to play 44K
-  if(BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_HEADPHONE1, 60, AUDIO_FREQUENCY_22K) == 0)
+
+  if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_HEADPHONE1, 30, AUDIO_FREQUENCY_22K) == 0)
   {
-	  xprintf("audio init OK\n");
+    xprintf("audio init OK\n");
   }
   else
   {
-	  xprintf("audio init ERROR\n");
+    xprintf("audio init ERROR\n");
   }
-  
-  
+  BSP_AUDIO_OUT_SetAudioFrameSlot(CODEC_AUDIOFRAME_SLOT_02);
+
+  // Read ID3v2 Tag
+  //char szArtist[120];
+  //char szTitle[120];
+  //Mp3ReadId3V2Tag(&file, szArtist, sizeof(szArtist), szTitle, sizeof(szTitle));
+
+  hMP3Decoder = MP3InitDecoder();
+
+  file_buff_ptr = file_buff;
+  if (f_read(&file, file_buff_ptr, FILE_BUFFER_SIZE, (void *)&bytesLeft) != F_OK)
+  {
+    xprintf("ups\n");
+  }
+  xprintf("wczytano: %d\n", bytesLeft);
+  processing_buff_ptr = processing_buff;
   /* Infinite loop */
-  for(;;)
+  for (;;)
   {
+    BSP_TS_GetState(&TS_State);
+    if (TS_State.touchDetected)
+    {
+      if ((TS_State.touchX[0] < 290) && (TS_State.touchX[0] > 190) && (TS_State.touchY[0] < 186) && (TS_State.touchY[0] > 86))
+      {
+        xprintf("play command...\n");
+        if (player_state)
+        {
+          xprintf("already playing\n");
+        }
+        else
+        {
+          player_state = 1;
+          BSP_AUDIO_OUT_Play((uint16_t *)&dma_buff[0], DMA_BUFFER_SIZE);
+          dma_buff_offs = BUFFER_OFFSET_NONE;
+          vTaskDelay(1000);
+        }
+      }
+    }
+    /*
+    char key = inkey();
 
-	BSP_TS_GetState(&TS_State);
-	if(TS_State.touchDetected)
-	{
-		BSP_LCD_Clear(LCD_COLOR_WHITE);
-		BSP_LCD_SetTextColor(0x40FF00FF);
-		BSP_LCD_FillCircle(TS_State.touchX[0],TS_State.touchY[0],40);
-	}
+    switch (key)
+    {
+      case 'p':
+      {
+        xprintf("play command...\n");
+        if (player_state)
+        {
+          xprintf("already playing\n");
+          break;
+        }
+        player_state = 1;
+        BSP_AUDIO_OUT_Play((uint16_t *)&dma_buff[0], DMA_BUFFER_SIZE);
+        dma_buff_offs = BUFFER_OFFSET_NONE;
+        //fpos = 0;
+        break;
+      }
+    }
+    */
+    if (player_state)
+    {
+      if (dma_buff_offs == BUFFER_OFFSET_HALF)
+      {
+        //xprintf("if1\n");
+        while (processing_buff_offs < DMA_BUFFER_SIZE / 2)
+        {
+          int offset = MP3FindSyncWord((unsigned char *)file_buff_ptr, bytesLeft);
+          //xprintf("offset: %d\n", offset);
+          bytesLeft -= offset;
+          file_buff_ptr += offset;
+          int err = MP3Decode(hMP3Decoder, (unsigned char **)&file_buff_ptr, (int *)&bytesLeft, processing_buff_ptr, 0);
+          if (err)
+            xprintf("BLAD: %d\n", err);
+          MP3DecInfo *mp3DecInfo = (MP3DecInfo *)hMP3Decoder;
+          processing_buff_offs += mp3DecInfo->nGrans * mp3DecInfo->nGranSamps * mp3DecInfo->nChans;
+          MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
+          //xprintf("%d\n", mp3FrameInfo.nChans);
+          //xprintf("%d ", mp3DecInfo -> nChans);
+          //xprintf("%d ", mp3FrameInfo.bitrate);
+          //xprintf("%d ", mp3FrameInfo.nChans);
+          //xprintf("%d ", mp3FrameInfo.samprate);
+          //xprintf("%d ", mp3FrameInfo.bitsPerSample);
+          //xprintf("%d ", mp3FrameInfo.outputSamps);
+          //xprintf("%d ", mp3FrameInfo.layer);
+          //xprintf("%d\n", mp3FrameInfo.version);
 
-	char key = inkey();
-	
-	switch(key)
-	{
-		case 'p':
-		{
-			xprintf("play command...\n");
-			if(player_state) {xprintf("already playing\n"); break;}
-			player_state = 1;
-			BSP_AUDIO_OUT_Play((uint16_t*)&buff[0],AUDIO_OUT_BUFFER_SIZE);
-			fpos = 0;
-			buf_offs = BUFFER_OFFSET_NONE;
-			break;
-		}
-	}
-	
-	if(player_state)
-	{
-		uint32_t br;
-		
-		if(buf_offs == BUFFER_OFFSET_HALF)
-		{
-		  if(f_read(&file, 
-					&buff[0], 
-					AUDIO_OUT_BUFFER_SIZE/2,
-					(void *)&br) != FR_OK)
-		  { 
-			BSP_AUDIO_OUT_Stop(CODEC_PDWN_SW); 
-			xprintf("f_read error on half\n");
-		  }
-		  buf_offs = BUFFER_OFFSET_NONE;
-		  fpos += br;
-		  
-		}
-		
-		if(buf_offs == BUFFER_OFFSET_FULL)
-		{
-			if(f_read(&file, 
-					&buff[AUDIO_OUT_BUFFER_SIZE /2], 
-					AUDIO_OUT_BUFFER_SIZE/2, 
-					(void *)&br) != FR_OK)
-			{ 
-				BSP_AUDIO_OUT_Stop(CODEC_PDWN_SW); 
-				xprintf("f_read error on full\n");
-			} 
+          processing_buff_ptr = processing_buff + processing_buff_offs;
+        }
+        memcpy(dma_buff, processing_buff, DMA_BUFFER_SIZE / 2);
+        memcpy(file_buff, file_buff_ptr, bytesLeft);
+        memcpy(processing_buff, &processing_buff[DMA_BUFFER_SIZE / 2], (processing_buff_offs - DMA_BUFFER_SIZE / 2));
+        file_buff_ptr = file_buff + bytesLeft;
+        int br;
+        if (f_read(&file, file_buff_ptr, (FILE_BUFFER_SIZE - bytesLeft), (void *)&br) != F_OK)
+        {
+          xprintf("ups\n");
+        }
+        file_buff_ptr = file_buff;
+        bytesLeft += br;
+        //xprintf("in buffer: %d\n", bytesLeft);
+        processing_buff_offs -= DMA_BUFFER_SIZE / 2;
+        processing_buff_ptr = processing_buff + processing_buff_offs;
+        dma_buff_offs = BUFFER_OFFSET_NONE;
+        //fpos = DMA_BUFFER_SIZE / 2;
+      }
 
-			buf_offs = BUFFER_OFFSET_NONE;
-			fpos += br; 
-		}
+      if (dma_buff_offs == BUFFER_OFFSET_FULL)
+      {
+        //xprintf("if2\n");
+        while (processing_buff_offs < DMA_BUFFER_SIZE / 2)
+        {
+          int offset = MP3FindSyncWord((unsigned char *)file_buff_ptr, bytesLeft);
+          //xprintf("offset: %d\n", offset);
+          bytesLeft -= offset;
+          file_buff_ptr += offset;
+          int err = MP3Decode(hMP3Decoder, (unsigned char **)&file_buff_ptr, (int *)&bytesLeft, processing_buff_ptr, 0);
+          if (err)
+            xprintf("BLAD: %d\n", err);
+          MP3DecInfo *mp3DecInfo = (MP3DecInfo *)hMP3Decoder;
+          MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
+          processing_buff_offs += mp3DecInfo->nGrans * mp3DecInfo->nGranSamps * mp3DecInfo->nChans;
+          //xprintf("%d\n", mp3FrameInfo.nChans);
+          //xprintf("%d\n", mp3DecInfo -> nChans);
+          //xprintf("%d ", mp3FrameInfo.bitrate);
+          //xprintf("%d ", mp3FrameInfo.nChans);
+          //xprintf("%d ", mp3FrameInfo.samprate);
+          //xprintf("%d ", mp3FrameInfo.bitsPerSample);
+          //xprintf("%d ", mp3FrameInfo.outputSamps);
+          //xprintf("%d ", mp3FrameInfo.layer);
+          //xprintf("%d\n", mp3FrameInfo.version);
+          processing_buff_ptr = processing_buff + processing_buff_offs;
+        }
+        memcpy(dma_buff + DMA_BUFFER_SIZE / 2, processing_buff, DMA_BUFFER_SIZE / 2);
+        memcpy(file_buff, file_buff_ptr, bytesLeft);
+        memcpy(processing_buff, &processing_buff[DMA_BUFFER_SIZE / 2], (processing_buff_offs - DMA_BUFFER_SIZE / 2));
+        file_buff_ptr = file_buff + bytesLeft;
+        int br;
+        if (f_read(&file, file_buff_ptr, (FILE_BUFFER_SIZE - bytesLeft), (void *)&br) != F_OK)
+        {
+          xprintf("ups\n");
+        }
+        file_buff_ptr = file_buff;
+        bytesLeft += br;
+        //xprintf("in buffer: %d\n", bytesLeft);
+        processing_buff_offs -= DMA_BUFFER_SIZE / 2;
+        processing_buff_ptr = processing_buff + processing_buff_offs;
+        dma_buff_offs = BUFFER_OFFSET_NONE;
+        //fpos = DMA_BUFFER_SIZE / 2;
+      }
 
-		if( br < AUDIO_OUT_BUFFER_SIZE/2 )
-		{
-			xprintf("stop at eof\n");
-			BSP_AUDIO_OUT_Stop(CODEC_PDWN_SW); 
-			player_state = 0;
-		}
-	}  //if(player_state)
+      if (bytesLeft < DMA_BUFFER_SIZE / 2)
+      {
+        xprintf("stop at eof\n");
+        BSP_AUDIO_OUT_Stop(CODEC_PDWN_SW);
+        player_state = 0;
+      }
+    } //if(player_state)
 
-
-	vTaskDelay(2);
-
+    vTaskDelay(2);
   }
-  /* USER CODE END 5 */ 
+  /* USER CODE END 5 */
 }
 
 /**
@@ -1761,7 +2141,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
 
   /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM6) {
+  if (htim->Instance == TIM6)
+  {
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
@@ -1779,13 +2160,13 @@ void _Error_Handler(char *file, int line)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-  while(1)
+  while (1)
   {
   }
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
@@ -1793,8 +2174,8 @@ void _Error_Handler(char *file, int line)
   * @param  line: assert_param error line source number
   * @retval None
   */
-void assert_failed(uint8_t* file, uint32_t line)
-{ 
+void assert_failed(uint8_t *file, uint32_t line)
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

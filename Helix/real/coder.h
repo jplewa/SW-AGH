@@ -90,13 +90,13 @@
 #define VBUF_LENGTH				(17 * 2 * NBANDS)	/* for double-sized vbuf FIFO */
 
 /* additional external symbols to name-mangle for static linking */
-#define	SetBitstreamPointer	STATNAME(SetBitstreamPointer)
-#define	GetBits				STATNAME(GetBits)
-#define	CalcBitsUsed		STATNAME(CalcBitsUsed)
-#define	DequantChannel		STATNAME(DequantChannel)
-#define	MidSideProc			STATNAME(MidSideProc)
-#define	IntensityProcMPEG1	STATNAME(IntensityProcMPEG1)
-#define	IntensityProcMPEG2	STATNAME(IntensityProcMPEG2)
+#define SetBitstreamPointer	STATNAME(SetBitstreamPointer)
+#define GetBits				STATNAME(GetBits)
+#define CalcBitsUsed		STATNAME(CalcBitsUsed)
+#define	 DequantChannel		STATNAME(DequantChannel)
+#define	 MidSideProc			STATNAME(MidSideProc)
+#define	 IntensityProcMPEG1	STATNAME(IntensityProcMPEG1)
+#define	 IntensityProcMPEG2	STATNAME(IntensityProcMPEG2)
 #define PolyphaseMono		STATNAME(PolyphaseMono)
 #define PolyphaseStereo		STATNAME(PolyphaseStereo)
 #define FDCT32				STATNAME(FDCT32)
@@ -270,8 +270,7 @@ void IntensityProcMPEG2(int x[MAX_NCHAN][MAX_NSAMP], int nSamps, FrameHeader *fh
 						CriticalBandInfo *cbi, ScaleFactorJS *sfjs, int midSideFlag, int mixFlag, int mOut[2]);
 
 /* dct32.c */
-// about 1 ms faster in RAM, but very large
-void FDCT32(int *x, int *d, int offset, int oddBlock, int gb);// __attribute__ ((section (".data")));
+void FDCT32(int *x, int *d, int offset, int oddBlock, int gb);
 
 /* hufftabs.c */
 extern const HuffTabLookup huffTabLookup[HUFF_PAIRTABS];

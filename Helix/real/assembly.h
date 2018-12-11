@@ -1,4 +1,4 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK ***** 
  * Version: RCSL 1.0/RPSL 1.0 
  *  
  * Portions Copyright (c) 1995-2002 RealNetworks, Inc. All Rights Reserved. 
@@ -23,7 +23,7 @@
  * This file, and the files included with this file, is distributed and made 
  * available on an 'AS IS' basis, WITHOUT WARRANTY OF ANY KIND, EITHER 
  * EXPRESS OR IMPLIED, AND REALNETWORKS HEREBY DISCLAIMS ALL SUCH WARRANTIES, 
- * INCLUDING WITHOUT LIMITATION, ANY WARRANTIES OF MERCHANTABILITY, FITNESS
+ * INCLUDING WITHOUT LIMITATION, ANY WARRANTIES OF MERCHANTABILITY, FITNESS 
  * FOR A PARTICULAR PURPOSE, QUIET ENJOYMENT OR NON-INFRINGEMENT. 
  * 
  * Technology Compatibility Kit Test Suite(s) Location: 
@@ -56,7 +56,9 @@
 #ifndef _ASSEMBLY_H
 #define _ASSEMBLY_H
 
-#if (defined _WIN32 && !defined _WIN32_WCE) || (defined __WINS__ && defined _SYMBIAN) || defined(_OPENWAVE_SIMULATOR) || defined(WINCE_EMULATOR)    /* Symbian emulator for Ix86 */
+#include "../platform.h"
+
+#if (defined _WIN32 && !defined _WIN32_WCE) || (defined __WINS__ && defined _SYMBIAN) || defined(_OPENWAVE_SIMULATOR) || defined(WINCE_EMULATOR) || defined (AEE_SIMULATOR)    /* Symbian emulator for Ix86 */
 
 #pragma warning( disable : 4035 )	/* complains about inline asm not returning a value */
 
@@ -278,7 +280,7 @@ static __inline int MULSHIFT32(int x, int y)
      * Note: Rs determines early termination (leading sign bits) so if you want to specify
      *   which operand is Rs, put it in the SECOND argument (y)
 	 * For inline assembly, x and y are not assumed to be R0, R1 so it shouldn't matter
-	 *   which one is returned. (If this were a function call, returning y (R1) would
+	 *   which one is returned. (If this were a function call, returning y (R1) would 
 	 *   require an extra "mov r0, r1")
      */
     int zlow;
@@ -287,14 +289,14 @@ static __inline int MULSHIFT32(int x, int y)
     return y;
 }
 
-static __inline int FASTABS(int x)
+static __inline int FASTABS(int x) 
 {
 	int t=0; /*Really is not necessary to initialiaze only to avoid warning*/
 
 	__asm__ volatile (
 		"eor %0,%2,%2, asr #31;"
 		"sub %0,%1,%2, asr #31;"
-		: "=&r" (t)
+		: "=&r" (t) 
 		: "0" (t), "r" (x)
 	 );
 
@@ -312,77 +314,87 @@ static __inline int CLZ(int x)
 	while (!(x & 0x80000000)) {
 		numZeros++;
 		x <<= 1;
-	}
+	} 
 
 	return numZeros;
 }
 
-#elif defined(__GNUC__) && defined(__AVR32_UC__)
-
-typedef signed long long int    Word64;  // 64-bit signed integer.
-
-
-__attribute__((__always_inline__)) static __inline int MULSHIFT32(int x, int y)
+#elif defined(ARM_TEST)
+static __inline__ int MULSHIFT32(int x, int y)
 {
-    signed long long int s64Tmp;
-    __asm__ __volatile__( "muls.d	%0, %1, %2"
-                          : "=r" (s64Tmp)
-                          : "r" (x), "r" (y) );
-		return( s64Tmp >> 32 );
+	int zlow;
+	__asm__ volatile ("smull %0,%1,%2,%3" : "=&r" (zlow), "=r" (y) : "r" (x), "1" (y) : "cc");
+	return y;
 }
 
-__attribute__((__always_inline__)) static __inline int FASTABS(int x)
+static __inline int FASTABS(int x)
 {
-    int tmp;
-    __asm__ __volatile__( "abs %0"
-                          : "=r" (tmp)
-                          : "r" (x) );
-    return tmp; 
-    
+	int sign;
+
+	sign = x >> (sizeof(int) * 8 - 1);
+	x ^= sign;
+	x -= sign;
+
+	return x;
 }
 
-
-__attribute__((__always_inline__))  static __inline int CLZ(int x)
+static __inline int CLZ(int x)
 {
-    int tmp;
-    __asm__ __volatile__( "clz %0,%1"
-                          : "=r" (tmp)
-                          : "r" (x) );
-    return tmp;
+	int numZeros;
+
+	/*if (!x)
+return (sizeof(int) * 8);
+
+numZeros = 0;
+while (!(x & 0x80000000)) {
+numZeros++;
+x <
+}*/
+
+	__asm__ ("clz %0, %1" : "=r" (numZeros) : "r" (x) : "cc");
+
+	return numZeros;
 }
 
+//static __inline int CLZ(int x) {
+//	int numZeros;
+//
+//	if (!x) {
+//		return (sizeof(int) * 8);
+//	}
+//
+//	numZeros = 0;
+//	while (!(x & 0x80000000)) {
+//		numZeros++;
+//		x <<= 1;
+//	}
+//
+//	return numZeros;
+//}
 
-/* MADD64, SAR64:
- * write in assembly to avoid dependency on run-time lib for 64-bit shifts, muls
- * (sometimes compiler do function calls instead of code generating)
- */
-__attribute__((__always_inline__)) static __inline Word64 MADD64(Word64 sum, int x, int y)
+typedef union _U64 {
+	Word64 w64;
+	struct {
+		/* ARM ADS = little endian */
+		unsigned int lo32;
+		signed int hi32;
+	} r;
+} U64;
+
+static __inline Word64 MADD64(Word64 sum64, int x, int y)
 {
-  __asm__ __volatile__( "macs.d %0, %1, %2"
-                        : "+r" (sum)
-                        : "r" (x), "r" (y) );
-  return( sum );
+	U64 u;
+	u.w64 = sum64;
+
+	__asm__ volatile ("smlal %0,%1,%2,%3" : "+&r" (u.r.lo32), "+&r" (u.r.hi32) : "r" (x), "r" (y) : "cc");
+
+	return u.w64;
 }
-
-
-__attribute__((__always_inline__)) static __inline Word64 SAR64(Word64 x, int n)
+static __inline Word64 SAR64(Word64 x, int n)
 {
-  unsigned int xLo = (unsigned int) x;
-  int xHi = (int) (x >> 32);
-  int nComp = 32-n;
-  int tmp;
-  // Shortcut: n is always < 32. 
-  __asm__ __volatile__( "lsl %2, %0, %3\n\t"  // tmp <- xHi<<(32-n)
-                        "asr %0, %0, %4\n\t"  // xHi <- xHi>>n
-                        "lsr %1, %1, %4\n\t"  // xLo <- xLo>>n
-                        "or  %1, %2\n\t"      // xLo <= xLo || tmp
-                        : "+&r" (xHi), "+r" (xLo), "=&r" (tmp)
-                        : "r" (nComp), "r" (n) );
-  x = xLo | ((Word64)xHi << 32);
-  return( x );
+	return x >> n;
+
 }
-
-
 
 #else
 
