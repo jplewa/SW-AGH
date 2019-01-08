@@ -86,6 +86,7 @@
 #include "pub/mp3common.h"
 
 #include "buttons.h"
+#include "mp3audio.h"
 
 /* USER CODE END Includes */
 
@@ -426,7 +427,7 @@ void draw_title(uint8_t *title)
   BSP_LCD_DisplayStringAt(LCD_X_SIZE / 2, LCD_Y_SIZE / 2 + 53 + 20, title, CENTER_MODE);
 }
 */
-static TS_StateTypeDef TS_State;
+//static TS_StateTypeDef TS_State;
 
 int initialize_touchscreen(void)
 {
@@ -1712,8 +1713,8 @@ static void http_server_netconn_thread(void const *arg)
   }
 }
 
-
-#define FILE_BUFFER_SIZE 8192 //* 2
+/*
+#define FILE_BUFFER_SIZE 8192
 char file_buff[FILE_BUFFER_SIZE];
 int bytesLeft = 0;
 char *file_buff_ptr;
@@ -1731,14 +1732,7 @@ enum
   BUFFER_OFFSET_HALF,
   BUFFER_OFFSET_FULL,
 };
-
-static FIL file;
-extern ApplicationTypeDef Appli_state;
-static uint8_t player_state = 0;
-static uint8_t dma_buff_offs = BUFFER_OFFSET_NONE;
-
-static HMP3Decoder hMP3Decoder;
-static MP3FrameInfo mp3FrameInfo;
+*/
 
 void BSP_AUDIO_OUT_TransferComplete_CallBack(void)
 {
@@ -1749,8 +1743,10 @@ void BSP_AUDIO_OUT_HalfTransfer_CallBack(void)
 {
   dma_buff_offs = BUFFER_OFFSET_HALF;
 }
- uint8_t volume = 30; 
 
+//uint8_t volume = 30; 
+
+/*
 void process_callback(int dma_offset)
 {
   while (processing_buff_offs < DMA_BUFFER_SIZE / 4)
@@ -1779,7 +1775,8 @@ void process_callback(int dma_offset)
   processing_buff_ptr = processing_buff + processing_buff_offs;
   dma_buff_offs = BUFFER_OFFSET_NONE;
 }
-
+*/
+/*
 void play_file(char* file_name)
 {
   FRESULT res;
@@ -1804,7 +1801,6 @@ void play_file(char* file_name)
     xprintf("ups\n");
   }
   processing_buff_ptr = processing_buff;
-  /* Infinite loop */
   for (;;)
   {
 
@@ -1866,6 +1862,7 @@ void play_file(char* file_name)
     vTaskDelay(2);
   }
 }
+*/
 
 // https://vectr.com/crossix/aGqzpq926
 

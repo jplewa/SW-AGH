@@ -29,4 +29,14 @@ int skip_right_X;
 int minus_button_X;
 int plus_button_X;
 
+void draw_background();
+void initialize_button_values();
+void draw_previous_button();
+void draw_stop_button();
+void draw_play_button();
+void draw_pause_button();
+void draw_next_button();
+void draw_minus_button();
+void draw_plus_button();
+
 #endif

@@ -83,6 +83,23 @@ void draw_stop_button(){
 	BSP_LCD_FillRect(stop_button_X - 27, big_button_Y - 27, 54, 54);
 }
 
+void draw_pause_button(){
+
+	BSP_LCD_SetTextColor(OUTER_SHADE_COLOR);
+	BSP_LCD_FillCircle(play_button_X, big_button_Y, big_button_radius + 3);
+
+	BSP_LCD_SetTextColor(OUTER_BUTTON_COLOR);
+	BSP_LCD_FillCircle(play_button_X, big_button_Y, big_button_radius);
+
+	BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
+	BSP_LCD_FillRect(play_button_X - 28, big_button_Y - 28, 22, 56);
+    BSP_LCD_FillRect(play_button_X + 6, big_button_Y - 28, 22, 56);
+
+	BSP_LCD_SetTextColor(INNER_BUTTON_COLOR);
+	BSP_LCD_FillRect(play_button_X - 27, big_button_Y - 27, 20, 54);
+    BSP_LCD_FillRect(play_button_X + 7, big_button_Y - 27, 20, 54);
+}
+
 
 void draw_previous_button(){
 
@@ -91,35 +108,35 @@ void draw_previous_button(){
 	BSP_LCD_SetTextColor(OUTER_BUTTON_COLOR);
 	BSP_LCD_FillCircle(skip_left_X, medium_button_Y, medium_button_radius);
 	BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
-	points[0].X = skip_left_X - 23;
+	points[0].X = skip_left_X + 23;
 	points[0].Y = medium_button_Y - 19;
-	points[1].X = skip_left_X - 3;
+	points[1].X = skip_left_X + 3;
 	points[1].Y = medium_button_Y - 8;
-	points[2].X = skip_left_X - 3;
+	points[2].X = skip_left_X + 3;
 	points[2].Y = medium_button_Y - 19;
-	points[3].X = skip_left_X + 31;
+	points[3].X = skip_left_X - 31;
 	points[3].Y = medium_button_Y;
-	points[4].X = skip_left_X - 3;
+	points[4].X = skip_left_X + 3;
 	points[4].Y = medium_button_Y + 19;
-	points[5].X = skip_left_X - 3;
+	points[5].X = skip_left_X + 3;
 	points[5].Y = medium_button_Y + 8;
-	points[6].X = skip_left_X - 23;
+	points[6].X = skip_left_X + 23;
 	points[6].Y = medium_button_Y + 19;
 	BSP_LCD_FillPolygon(points, 7);
 	BSP_LCD_SetTextColor(INNER_BUTTON_COLOR);
-	points[0].X = skip_left_X - 22;
+	points[0].X = skip_left_X + 22;
 	points[0].Y = medium_button_Y - 18;
-	points[1].X = skip_left_X - 2;
+	points[1].X = skip_left_X + 2;
 	points[1].Y = medium_button_Y - 7;
-	points[2].X = skip_left_X - 2;
+	points[2].X = skip_left_X + 2;
 	points[2].Y = medium_button_Y - 18;
-	points[3].X = skip_left_X + 30;
+	points[3].X = skip_left_X - 30;
 	points[3].Y = medium_button_Y;
-	points[4].X = skip_left_X - 2;
+	points[4].X = skip_left_X + 2;
 	points[4].Y = medium_button_Y + 18;
-	points[5].X = skip_left_X - 2;
+	points[5].X = skip_left_X + 2;
 	points[5].Y = medium_button_Y + 7;
-	points[6].X = skip_left_X - 22;
+	points[6].X = skip_left_X + 22;
 	points[6].Y = medium_button_Y + 18;
 	BSP_LCD_FillPolygon(points, 7);
 }
