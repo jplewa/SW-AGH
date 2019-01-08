@@ -85,6 +85,8 @@
 #include "pub/mp3dec.h"
 #include "pub/mp3common.h"
 
+#include "buttons.h"
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -276,7 +278,7 @@ static int medium_button_distance = 25;
 static int skip_left_X = medium_button_distance + medium_button_radius;
 static int skip_right_X = LCD_X_SIZE - medium_button_distance - medium_button_radius;
 */
-
+/*
 Point points[10];
 
 void draw_play_button()
@@ -423,7 +425,7 @@ void draw_title(uint8_t *title)
   BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
   BSP_LCD_DisplayStringAt(LCD_X_SIZE / 2, LCD_Y_SIZE / 2 + 53 + 20, title, CENTER_MODE);
 }
-
+*/
 static TS_StateTypeDef TS_State;
 
 int initialize_touchscreen(void)
@@ -1908,7 +1910,7 @@ void StartDefaultTask(void const *argument)
 
   if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_HEADPHONE1, volume, AUDIO_FREQUENCY_44K) == 0)
   {
-    xprintf("audio init OK\n");
+    xprintf(" audio init OK\n");
   }
   else
   {

@@ -52,6 +52,7 @@ Helix/real/polyphase.c \
 Helix/real/trigtabs.c \
 Helix/real/stproc.c \
 Src/main.c \
+Src/buttons.c \
 Src/bsp_driver_sd.c \
 Src/sd_diskio.c \
 Src/fatfs.c \
