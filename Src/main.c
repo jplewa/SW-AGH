@@ -263,6 +263,19 @@ void draw_background(void)
 	BSP_LCD_SelectLayer(1);
 }
 */
+/*
+static int big_button_radius = 50;
+static int medium_button_radius = 40;
+static int big_button_Y = 80 + big_button_radius; // center of stop/play/pause
+static int medium_button_y = 80 + big_button_radius;
+static int small_button_radius = 25;
+static int big_button_distance = 20;
+static int stop_button_X = LCD_X_SIZE/2 - big_button_radius - big_button_distance/2;
+static int play_button_X = LCD_X_SIZE/2 + big_button_radius + big_button_distance/2;
+static int medium_button_distance = 25;
+static int skip_left_X = medium_button_distance + medium_button_radius;
+static int skip_right_X = LCD_X_SIZE - medium_button_distance - medium_button_radius;
+*/
 
 Point points[10];
 
@@ -272,6 +285,7 @@ void draw_play_button()
   BSP_LCD_SelectLayer(0);
 
   BSP_LCD_SetTextColor(OUTER_BUTTON_COLOR);
+  //  BSP_LCD_FillCircle(play_button_X, big_button_Y, big_button_radius);
   BSP_LCD_FillCircle(LCD_X_SIZE / 2, LCD_Y_SIZE / 2, 50);
 
   BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
@@ -1696,185 +1710,18 @@ static void http_server_netconn_thread(void const *arg)
   }
 }
 
-static uint32_t Mp3ReadId3V2Text(FIL *pInFile, uint32_t unDataLen, char *pszBuffer, uint32_t unBufferSize)
-{
-  UINT unRead = 0;
-  BYTE byEncoding = 0;
-  if ((f_read(pInFile, &byEncoding, 1, &unRead) == FR_OK) && (unRead == 1))
-  {
-    unDataLen--;
-    if (unDataLen <= (unBufferSize - 1))
-    {
-      if ((f_read(pInFile, pszBuffer, unDataLen, &unRead) == FR_OK) ||
-          (unRead == unDataLen))
-      {
-        if (byEncoding == 0)
-        {
-          // ISO-8859-1 multibyte
-          // just add a terminating zero
-          pszBuffer[unDataLen] = 0;
-        }
-        else if (byEncoding == 1)
-        {
-          // UTF16LE unicode
-          uint32_t r = 0;
-          uint32_t w = 0;
-          if ((unDataLen > 2) && (pszBuffer[0] == 0xFF) && (pszBuffer[1] == 0xFE))
-          {
-            // ignore BOM, assume LE
-            r = 2;
-          }
-          for (; r < unDataLen; r += 2, w += 1)
-          {
-            // should be acceptable for 7 bit ascii
-            pszBuffer[w] = pszBuffer[r];
-          }
-          pszBuffer[w] = 0;
-        }
-      }
-      else
-      {
-        return 1;
-      }
-    }
-    else
-    {
-      // we won't read a partial text
-      if (f_lseek(pInFile, f_tell(pInFile) + unDataLen) != FR_OK)
-      {
-        return 1;
-      }
-    }
-  }
-  else
-  {
-    return 1;
-  }
-  return 0;
-}
 
-/*
- * Taken from
- * http://www.mikrocontroller.net/topic/252319
- */
-static uint32_t Mp3ReadId3V2Tag(FIL *pInFile, char *pszArtist, uint32_t unArtistSize, char *pszTitle, uint32_t unTitleSize)
-{
-  pszArtist[0] = 0;
-  pszTitle[0] = 0;
-
-  BYTE id3hd[10];
-  UINT unRead = 0;
-  if ((f_read(pInFile, id3hd, 10, &unRead) != FR_OK) || (unRead != 10))
-  {
-    return 1;
-  }
-  else
-  {
-    uint32_t unSkip = 0;
-    if ((unRead == 10) &&
-        (id3hd[0] == 'I') &&
-        (id3hd[1] == 'D') &&
-        (id3hd[2] == '3'))
-    {
-      unSkip += 10;
-      unSkip = ((id3hd[6] & 0x7f) << 21) | ((id3hd[7] & 0x7f) << 14) | ((id3hd[8] & 0x7f) << 7) | (id3hd[9] & 0x7f);
-
-      // try to get some information from the tag
-      // skip the extended header, if present
-      uint8_t unVersion = id3hd[3];
-      if (id3hd[5] & 0x40)
-      {
-        BYTE exhd[4];
-        f_read(pInFile, exhd, 4, &unRead);
-        size_t unExHdrSkip = ((exhd[0] & 0x7f) << 21) | ((exhd[1] & 0x7f) << 14) | ((exhd[2] & 0x7f) << 7) | (exhd[3] & 0x7f);
-        unExHdrSkip -= 4;
-        if (f_lseek(pInFile, f_tell(pInFile) + unExHdrSkip) != FR_OK)
-        {
-          return 1;
-        }
-      }
-      uint32_t nFramesToRead = 2;
-      while (nFramesToRead > 0)
-      {
-        char frhd[10];
-        if ((f_read(pInFile, frhd, 10, &unRead) != FR_OK) || (unRead != 10))
-        {
-          return 1;
-        }
-        if ((frhd[0] == 0) || (strncmp(frhd, "3DI", 3) == 0))
-        {
-          break;
-        }
-        char szFrameId[5] = {0, 0, 0, 0, 0};
-        memcpy(szFrameId, frhd, 4);
-        uint32_t unFrameSize = 0;
-        uint32_t i = 0;
-        for (; i < 4; i++)
-        {
-          if (unVersion == 3)
-          {
-            // ID3v2.3
-            unFrameSize <<= 8;
-            unFrameSize += frhd[i + 4];
-          }
-          if (unVersion == 4)
-          {
-            // ID3v2.4
-            unFrameSize <<= 7;
-            unFrameSize += frhd[i + 4] & 0x7F;
-          }
-        }
-
-        if (strcmp(szFrameId, "TPE1") == 0)
-        {
-          // artist
-          if (Mp3ReadId3V2Text(pInFile, unFrameSize, pszArtist, unArtistSize) != 0)
-          {
-            break;
-          }
-          nFramesToRead--;
-        }
-        else if (strcmp(szFrameId, "TIT2") == 0)
-        {
-          // title
-          if (Mp3ReadId3V2Text(pInFile, unFrameSize, pszTitle, unTitleSize) != 0)
-          {
-            break;
-          }
-          nFramesToRead--;
-        }
-        else
-        {
-          if (f_lseek(pInFile, f_tell(pInFile) + unFrameSize) != FR_OK)
-          {
-            return 1;
-          }
-        }
-      }
-    }
-    if (f_lseek(pInFile, unSkip) != FR_OK)
-    {
-      return 1;
-    }
-  }
-
-  return 0;
-}
-
-#define FILE_BUFFER_SIZE 8192 * 2
+#define FILE_BUFFER_SIZE 8192 //* 2
 char file_buff[FILE_BUFFER_SIZE];
 int bytesLeft = 0;
 char *file_buff_ptr;
 
 #define DMA_BUFFER_SIZE 8192
-char processing_buff[DMA_BUFFER_SIZE];    // short?
-char *processing_buff_ptr;
+short processing_buff[DMA_BUFFER_SIZE / 2];
+short *processing_buff_ptr;
 int processing_buff_offs = 0;
 
 char dma_buff[DMA_BUFFER_SIZE];
-
-// ?
-//static uint32_t fpos = 0;
 
 enum
 {
@@ -1899,6 +1746,123 @@ void BSP_AUDIO_OUT_TransferComplete_CallBack(void)
 void BSP_AUDIO_OUT_HalfTransfer_CallBack(void)
 {
   dma_buff_offs = BUFFER_OFFSET_HALF;
+}
+ uint8_t volume = 30; 
+
+void process_callback(int dma_offset)
+{
+  while (processing_buff_offs < DMA_BUFFER_SIZE / 4)
+  {
+    int offset = MP3FindSyncWord((unsigned char *)file_buff_ptr, bytesLeft);
+      bytesLeft -= offset;
+      file_buff_ptr += offset;
+      int err = MP3Decode(hMP3Decoder, (unsigned char **)&file_buff_ptr, (int *)&bytesLeft, processing_buff_ptr, 0);
+      if (err) xprintf("BLAD: %d\n", err);
+      MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
+      processing_buff_offs += mp3FrameInfo.outputSamps;
+      processing_buff_ptr = processing_buff + processing_buff_offs;
+  }
+  memcpy(dma_buff + dma_offset, processing_buff, DMA_BUFFER_SIZE / 2);
+  memcpy(file_buff, file_buff_ptr, bytesLeft);
+  memcpy(processing_buff, &processing_buff[DMA_BUFFER_SIZE / 4], (processing_buff_offs - DMA_BUFFER_SIZE / 4) * 2);
+  file_buff_ptr = file_buff + bytesLeft;
+  int br;
+  if (f_read(&file, file_buff_ptr, (FILE_BUFFER_SIZE - bytesLeft), (void *)&br) != F_OK)
+  {
+    xprintf("ups\n");
+  }
+  file_buff_ptr = file_buff;
+  bytesLeft += br;
+  processing_buff_offs -= DMA_BUFFER_SIZE / 4;
+  processing_buff_ptr = processing_buff + processing_buff_offs;
+  dma_buff_offs = BUFFER_OFFSET_NONE;
+}
+
+void play_file(char* file_name)
+{
+  FRESULT res;
+
+  res = f_open(&file, file_name, FA_READ);
+
+  if (res == FR_OK)
+  {
+    xprintf("mp3 file open OK\n");
+  }
+  else
+  {
+    xprintf("mp3 file open ERROR, res = %d\n", res);
+    while (1)
+      ;
+  }
+
+  
+  file_buff_ptr = file_buff;
+  if (f_read(&file, file_buff_ptr, FILE_BUFFER_SIZE, (void *)&bytesLeft) != F_OK)
+  {
+    xprintf("ups\n");
+  }
+  processing_buff_ptr = processing_buff;
+  /* Infinite loop */
+  for (;;)
+  {
+
+    char key = inkey();
+    switch(key){
+      case 'a':
+        BSP_AUDIO_OUT_SetVolume(volume<100 ? ++volume : volume);
+        break;
+      case 'z':
+        BSP_AUDIO_OUT_SetVolume(volume>0 ? --volume : volume);
+        break;
+      case 'r':
+        BSP_AUDIO_OUT_Resume();
+        break;
+      case 'p':
+        BSP_AUDIO_OUT_Pause();
+        break;
+    }
+
+    BSP_TS_GetState(&TS_State);
+    if (TS_State.touchDetected)
+    {
+      if ((TS_State.touchX[0] < 290) && (TS_State.touchX[0] > 190) && (TS_State.touchY[0] < 186) && (TS_State.touchY[0] > 86))
+      {
+        xprintf("play command...\n");
+        if (player_state)
+        {
+          xprintf("already playing\n");
+        }
+        else
+        {
+          player_state = 1;
+          BSP_AUDIO_OUT_Play((uint16_t *)&dma_buff[0], DMA_BUFFER_SIZE);
+          dma_buff_offs = BUFFER_OFFSET_NONE;
+          vTaskDelay(1000);
+        }
+      }
+    }
+    if (player_state)
+    {
+      if (dma_buff_offs == BUFFER_OFFSET_HALF)
+      {
+        process_callback(0);
+      }
+
+      if (dma_buff_offs == BUFFER_OFFSET_FULL)
+      {
+        process_callback(DMA_BUFFER_SIZE / 2);
+      }
+
+      if (bytesLeft == 0)
+      {
+        xprintf("stop at eof\n");
+        BSP_AUDIO_OUT_Stop(CODEC_PDWN_SW);
+        player_state = 0;
+      }
+    } //if(player_state)
+
+    vTaskDelay(2);
+  }
 }
 
 // https://vectr.com/crossix/aGqzpq926
@@ -1928,36 +1892,21 @@ void StartDefaultTask(void const *argument)
   MX_LWIP_Init();
 
   /* USER CODE BEGIN 5 */
-  //osThreadDef(netconn_thread, http_server_netconn_thread, osPriorityNormal, 0, 1024);
-  //netconn_thread_handle = osThreadCreate(osThread(netconn_thread), NULL);
+  osThreadDef(netconn_thread, http_server_netconn_thread, osPriorityNormal, 0, 1024);
+  netconn_thread_handle = osThreadCreate(osThread(netconn_thread), NULL);
 
   vTaskDelay(1000);
-  //draw_background();
 
   xprintf("waiting for USB mass storage\n");
-  MP3InitDecoder();
+  //MP3InitDecoder();
   do
   {
     xprintf(".");
     vTaskDelay(250);
   } while (Appli_state != APPLICATION_READY);
 
-  FRESULT res;
 
-  res = f_open(&file, "1:/test_1k.mp3", FA_READ);
-
-  if (res == FR_OK)
-  {
-    xprintf("mp3 file open OK\n");
-  }
-  else
-  {
-    xprintf("mp3 file open ERROR, res = %d\n", res);
-    while (1)
-      ;
-  }
-
-  if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_HEADPHONE1, 30, AUDIO_FREQUENCY_22K) == 0)
+  if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_HEADPHONE1, volume, AUDIO_FREQUENCY_44K) == 0)
   {
     xprintf("audio init OK\n");
   }
@@ -1966,165 +1915,12 @@ void StartDefaultTask(void const *argument)
     xprintf("audio init ERROR\n");
   }
   BSP_AUDIO_OUT_SetAudioFrameSlot(CODEC_AUDIOFRAME_SLOT_02);
-
-  // Read ID3v2 Tag
-  //char szArtist[120];
-  //char szTitle[120];
-  //Mp3ReadId3V2Tag(&file, szArtist, sizeof(szArtist), szTitle, sizeof(szTitle));
-
   hMP3Decoder = MP3InitDecoder();
 
-  file_buff_ptr = file_buff;
-  if (f_read(&file, file_buff_ptr, FILE_BUFFER_SIZE, (void *)&bytesLeft) != F_OK)
-  {
-    xprintf("ups\n");
-  }
-  xprintf("wczytano: %d\n", bytesLeft);
-  processing_buff_ptr = processing_buff;
-  /* Infinite loop */
-  for (;;)
-  {
-    BSP_TS_GetState(&TS_State);
-    if (TS_State.touchDetected)
-    {
-      if ((TS_State.touchX[0] < 290) && (TS_State.touchX[0] > 190) && (TS_State.touchY[0] < 186) && (TS_State.touchY[0] > 86))
-      {
-        xprintf("play command...\n");
-        if (player_state)
-        {
-          xprintf("already playing\n");
-        }
-        else
-        {
-          player_state = 1;
-          BSP_AUDIO_OUT_Play((uint16_t *)&dma_buff[0], DMA_BUFFER_SIZE);
-          dma_buff_offs = BUFFER_OFFSET_NONE;
-          vTaskDelay(1000);
-        }
-      }
-    }
-    /*
-    char key = inkey();
+  play_file("1:/test_1k.mp3");
+  while(1){}
 
-    switch (key)
-    {
-      case 'p':
-      {
-        xprintf("play command...\n");
-        if (player_state)
-        {
-          xprintf("already playing\n");
-          break;
-        }
-        player_state = 1;
-        BSP_AUDIO_OUT_Play((uint16_t *)&dma_buff[0], DMA_BUFFER_SIZE);
-        dma_buff_offs = BUFFER_OFFSET_NONE;
-        //fpos = 0;
-        break;
-      }
-    }
-    */
-    if (player_state)
-    {
-      if (dma_buff_offs == BUFFER_OFFSET_HALF)
-      {
-        //xprintf("if1\n");
-        while (processing_buff_offs < DMA_BUFFER_SIZE / 2)
-        {
-          int offset = MP3FindSyncWord((unsigned char *)file_buff_ptr, bytesLeft);
-          //xprintf("offset: %d\n", offset);
-          bytesLeft -= offset;
-          file_buff_ptr += offset;
-          int err = MP3Decode(hMP3Decoder, (unsigned char **)&file_buff_ptr, (int *)&bytesLeft, processing_buff_ptr, 0);
-          if (err)
-            xprintf("BLAD: %d\n", err);
-          MP3DecInfo *mp3DecInfo = (MP3DecInfo *)hMP3Decoder;
-          processing_buff_offs += mp3DecInfo->nGrans * mp3DecInfo->nGranSamps * mp3DecInfo->nChans;
-          MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
-          //xprintf("%d\n", mp3FrameInfo.nChans);
-          //xprintf("%d ", mp3DecInfo -> nChans);
-          //xprintf("%d ", mp3FrameInfo.bitrate);
-          //xprintf("%d ", mp3FrameInfo.nChans);
-          //xprintf("%d ", mp3FrameInfo.samprate);
-          //xprintf("%d ", mp3FrameInfo.bitsPerSample);
-          //xprintf("%d ", mp3FrameInfo.outputSamps);
-          //xprintf("%d ", mp3FrameInfo.layer);
-          //xprintf("%d\n", mp3FrameInfo.version);
 
-          processing_buff_ptr = processing_buff + processing_buff_offs;
-        }
-        memcpy(dma_buff, processing_buff, DMA_BUFFER_SIZE / 2);
-        memcpy(file_buff, file_buff_ptr, bytesLeft);
-        memcpy(processing_buff, &processing_buff[DMA_BUFFER_SIZE / 2], (processing_buff_offs - DMA_BUFFER_SIZE / 2));
-        file_buff_ptr = file_buff + bytesLeft;
-        int br;
-        if (f_read(&file, file_buff_ptr, (FILE_BUFFER_SIZE - bytesLeft), (void *)&br) != F_OK)
-        {
-          xprintf("ups\n");
-        }
-        file_buff_ptr = file_buff;
-        bytesLeft += br;
-        //xprintf("in buffer: %d\n", bytesLeft);
-        processing_buff_offs -= DMA_BUFFER_SIZE / 2;
-        processing_buff_ptr = processing_buff + processing_buff_offs;
-        dma_buff_offs = BUFFER_OFFSET_NONE;
-        //fpos = DMA_BUFFER_SIZE / 2;
-      }
-
-      if (dma_buff_offs == BUFFER_OFFSET_FULL)
-      {
-        //xprintf("if2\n");
-        while (processing_buff_offs < DMA_BUFFER_SIZE / 2)
-        {
-          int offset = MP3FindSyncWord((unsigned char *)file_buff_ptr, bytesLeft);
-          //xprintf("offset: %d\n", offset);
-          bytesLeft -= offset;
-          file_buff_ptr += offset;
-          int err = MP3Decode(hMP3Decoder, (unsigned char **)&file_buff_ptr, (int *)&bytesLeft, processing_buff_ptr, 0);
-          if (err)
-            xprintf("BLAD: %d\n", err);
-          MP3DecInfo *mp3DecInfo = (MP3DecInfo *)hMP3Decoder;
-          MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
-          processing_buff_offs += mp3DecInfo->nGrans * mp3DecInfo->nGranSamps * mp3DecInfo->nChans;
-          //xprintf("%d\n", mp3FrameInfo.nChans);
-          //xprintf("%d\n", mp3DecInfo -> nChans);
-          //xprintf("%d ", mp3FrameInfo.bitrate);
-          //xprintf("%d ", mp3FrameInfo.nChans);
-          //xprintf("%d ", mp3FrameInfo.samprate);
-          //xprintf("%d ", mp3FrameInfo.bitsPerSample);
-          //xprintf("%d ", mp3FrameInfo.outputSamps);
-          //xprintf("%d ", mp3FrameInfo.layer);
-          //xprintf("%d\n", mp3FrameInfo.version);
-          processing_buff_ptr = processing_buff + processing_buff_offs;
-        }
-        memcpy(dma_buff + DMA_BUFFER_SIZE / 2, processing_buff, DMA_BUFFER_SIZE / 2);
-        memcpy(file_buff, file_buff_ptr, bytesLeft);
-        memcpy(processing_buff, &processing_buff[DMA_BUFFER_SIZE / 2], (processing_buff_offs - DMA_BUFFER_SIZE / 2));
-        file_buff_ptr = file_buff + bytesLeft;
-        int br;
-        if (f_read(&file, file_buff_ptr, (FILE_BUFFER_SIZE - bytesLeft), (void *)&br) != F_OK)
-        {
-          xprintf("ups\n");
-        }
-        file_buff_ptr = file_buff;
-        bytesLeft += br;
-        //xprintf("in buffer: %d\n", bytesLeft);
-        processing_buff_offs -= DMA_BUFFER_SIZE / 2;
-        processing_buff_ptr = processing_buff + processing_buff_offs;
-        dma_buff_offs = BUFFER_OFFSET_NONE;
-        //fpos = DMA_BUFFER_SIZE / 2;
-      }
-
-      if (bytesLeft < DMA_BUFFER_SIZE / 2)
-      {
-        xprintf("stop at eof\n");
-        BSP_AUDIO_OUT_Stop(CODEC_PDWN_SW);
-        player_state = 0;
-      }
-    } //if(player_state)
-
-    vTaskDelay(2);
-  }
   /* USER CODE END 5 */
 }
 
