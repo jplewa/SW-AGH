@@ -38,5 +38,7 @@ void draw_pause_button();
 void draw_next_button();
 void draw_minus_button();
 void draw_plus_button();
+void draw_volume();
+void draw_title();
 
 #endif

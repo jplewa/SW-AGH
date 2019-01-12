@@ -85,8 +85,9 @@
 #include "pub/mp3dec.h"
 #include "pub/mp3common.h"
 
-#include "buttons.h"
+//#include "buttons.h"
 #include "mp3audio.h"
+#include "screen_refresh.h"
 
 /* USER CODE END Includes */
 
@@ -215,227 +216,6 @@ char inkey(void)
   }
   else
     return 0;
-}
-
-//partially based on available code examples
-static void lcd_start(void)
-{
-  /* LCD Initialization */
-  BSP_LCD_Init();
-
-  /* LCD Initialization */
-  BSP_LCD_LayerDefaultInit(0, (unsigned int)0xC0000000);
-  //BSP_LCD_LayerDefaultInit(1, (unsigned int)lcd_image_bg+(LCD_X_SIZE*LCD_Y_SIZE*4));
-  BSP_LCD_LayerDefaultInit(1, (unsigned int)0xC0000000 + (LCD_X_SIZE * LCD_Y_SIZE * 4));
-
-  /* Enable the LCD */
-  BSP_LCD_DisplayOn();
-
-  /* Select the LCD Background Layer  */
-  BSP_LCD_SelectLayer(0);
-
-  /* Clear the Background Layer */
-  BSP_LCD_Clear(LCD_COLOR_WHITE);
-  BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-
-  BSP_LCD_SetColorKeying(1, LCD_COLOR_WHITE);
-
-  /* Select the LCD Foreground Layer  */
-  BSP_LCD_SelectLayer(1);
-
-  /* Clear the Foreground Layer */
-  BSP_LCD_Clear(LCD_COLOR_WHITE);
-  BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-
-  /* Configure the transparency for foreground and background :
-     Increase the transparency */
-  BSP_LCD_SetTransparency(0, 255);
-  BSP_LCD_SetTransparency(1, 255);
-}
-
-//[rmv]
-/*
-void draw_background(void)
-{
-	//Select the LCD Background Layer 
-	BSP_LCD_SelectLayer(0);
-	BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
-	BSP_LCD_FillRect(0.4*LCD_X_SIZE,0.2*LCD_Y_SIZE,150,130);
-	
-	//select Foreground Layer
-	BSP_LCD_SelectLayer(1);
-}
-*/
-/*
-static int big_button_radius = 50;
-static int medium_button_radius = 40;
-static int big_button_Y = 80 + big_button_radius; // center of stop/play/pause
-static int medium_button_y = 80 + big_button_radius;
-static int small_button_radius = 25;
-static int big_button_distance = 20;
-static int stop_button_X = LCD_X_SIZE/2 - big_button_radius - big_button_distance/2;
-static int play_button_X = LCD_X_SIZE/2 + big_button_radius + big_button_distance/2;
-static int medium_button_distance = 25;
-static int skip_left_X = medium_button_distance + medium_button_radius;
-static int skip_right_X = LCD_X_SIZE - medium_button_distance - medium_button_radius;
-*/
-/*
-Point points[10];
-
-void draw_play_button()
-{
-
-  BSP_LCD_SelectLayer(0);
-
-  BSP_LCD_SetTextColor(OUTER_BUTTON_COLOR);
-  //  BSP_LCD_FillCircle(play_button_X, big_button_Y, big_button_radius);
-  BSP_LCD_FillCircle(LCD_X_SIZE / 2, LCD_Y_SIZE / 2, 50);
-
-  BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
-  points[0].X = LCD_X_SIZE / 2 - 23;
-  points[0].Y = LCD_Y_SIZE / 2 - 28;
-  points[1].X = LCD_X_SIZE / 2 - 23;
-  points[1].Y = LCD_Y_SIZE / 2 + 28;
-  points[2].X = LCD_X_SIZE / 2 + 28;
-  points[2].Y = LCD_Y_SIZE / 2;
-  BSP_LCD_FillPolygon(points, 3);
-
-  BSP_LCD_SetTextColor(INNER_BUTTON_COLOR);
-  points[0].X = LCD_X_SIZE / 2 - 20;
-  points[0].Y = LCD_Y_SIZE / 2 - 25;
-  points[1].X = LCD_X_SIZE / 2 - 20;
-  points[1].Y = LCD_Y_SIZE / 2 + 25;
-  points[2].X = LCD_X_SIZE / 2 + 25;
-  points[2].Y = LCD_Y_SIZE / 2;
-  BSP_LCD_FillPolygon(points, 3);
-}
-
-void draw_stop_button()
-{
-
-  BSP_LCD_SelectLayer(0);
-
-  BSP_LCD_SetTextColor(OUTER_BUTTON_COLOR);
-  BSP_LCD_FillCircle(LCD_X_SIZE / 2, LCD_Y_SIZE / 2, 50);
-
-  BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
-  BSP_LCD_FillRect(212, 108, 56, 56);
-
-  BSP_LCD_SetTextColor(INNER_BUTTON_COLOR);
-  BSP_LCD_FillRect(213, 109, 54, 54);
-
-  BSP_LCD_SelectLayer(1);
-}
-
-// size 480 x 272 px
-void draw_background()
-{
-
-  // Select the LCD Background Layer
-  BSP_LCD_SelectLayer(0);
-  BSP_LCD_Clear(BG_COLOR);
-  BSP_LCD_SetBackColor(BG_COLOR);
-
-  // draw outer shades
-  BSP_LCD_SetTextColor(OUTER_SHADE_COLOR);
-  BSP_LCD_FillCircle(LCD_X_SIZE / 2, LCD_Y_SIZE / 2, 53);       // play
-  BSP_LCD_FillCircle(LCD_X_SIZE / 2 - 105, LCD_Y_SIZE / 2, 42); // previous
-  BSP_LCD_FillCircle(LCD_X_SIZE / 2 + 105, LCD_Y_SIZE / 2, 42); // next
-
-  // draw buttons
-  BSP_LCD_SetTextColor(OUTER_BUTTON_COLOR);
-  BSP_LCD_FillCircle(LCD_X_SIZE / 2 - 105, LCD_Y_SIZE / 2, 40); // previous
-  BSP_LCD_FillCircle(LCD_X_SIZE / 2 + 105, LCD_Y_SIZE / 2, 40); // next
-
-  // "next" figure
-  BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
-  points[0].X = LCD_X_SIZE / 2 + 105 - 23;
-  points[0].Y = LCD_Y_SIZE / 2 - 19;
-  points[1].X = LCD_X_SIZE / 2 + 105 - 3;
-  points[1].Y = LCD_Y_SIZE / 2 - 8;
-  points[2].X = LCD_X_SIZE / 2 + 105 - 3;
-  points[2].Y = LCD_Y_SIZE / 2 - 19;
-  points[3].X = LCD_X_SIZE / 2 + 105 + 31;
-  points[3].Y = LCD_Y_SIZE / 2;
-  points[4].X = LCD_X_SIZE / 2 + 105 - 3;
-  points[4].Y = LCD_Y_SIZE / 2 + 19;
-  points[5].X = LCD_X_SIZE / 2 + 105 - 3;
-  points[5].Y = LCD_Y_SIZE / 2 + 8;
-  points[6].X = LCD_X_SIZE / 2 + 105 - 23;
-  points[6].Y = LCD_Y_SIZE / 2 + 19;
-  BSP_LCD_FillPolygon(points, 7);
-  BSP_LCD_SetTextColor(INNER_BUTTON_COLOR);
-  points[0].X = LCD_X_SIZE / 2 + 105 - 22;
-  points[0].Y = LCD_Y_SIZE / 2 - 18;
-  points[1].X = LCD_X_SIZE / 2 + 105 - 2;
-  points[1].Y = LCD_Y_SIZE / 2 - 7;
-  points[2].X = LCD_X_SIZE / 2 + 105 - 2;
-  points[2].Y = LCD_Y_SIZE / 2 - 18;
-  points[3].X = LCD_X_SIZE / 2 + 105 + 30;
-  points[3].Y = LCD_Y_SIZE / 2;
-  points[4].X = LCD_X_SIZE / 2 + 105 - 2;
-  points[4].Y = LCD_Y_SIZE / 2 + 18;
-  points[5].X = LCD_X_SIZE / 2 + 105 - 2;
-  points[5].Y = LCD_Y_SIZE / 2 + 7;
-  points[6].X = LCD_X_SIZE / 2 + 105 - 22;
-  points[6].Y = LCD_Y_SIZE / 2 + 18;
-  BSP_LCD_FillPolygon(points, 7);
-
-  // "previous" figure
-  BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
-  points[0].X = LCD_X_SIZE / 2 - 105 + 23;
-  points[0].Y = LCD_Y_SIZE / 2 - 19;
-  points[1].X = LCD_X_SIZE / 2 - 105 + 3;
-  points[1].Y = LCD_Y_SIZE / 2 - 8;
-  points[2].X = LCD_X_SIZE / 2 - 105 + 3;
-  points[2].Y = LCD_Y_SIZE / 2 - 19;
-  points[3].X = LCD_X_SIZE / 2 - 105 - 31;
-  points[3].Y = LCD_Y_SIZE / 2;
-  points[4].X = LCD_X_SIZE / 2 - 105 + 3;
-  points[4].Y = LCD_Y_SIZE / 2 + 19;
-  points[5].X = LCD_X_SIZE / 2 - 105 + 3;
-  points[5].Y = LCD_Y_SIZE / 2 + 8;
-  points[6].X = LCD_X_SIZE / 2 - 105 + 23;
-  points[6].Y = LCD_Y_SIZE / 2 + 19;
-  BSP_LCD_FillPolygon(points, 7);
-  BSP_LCD_SetTextColor(INNER_BUTTON_COLOR);
-  points[0].X = LCD_X_SIZE / 2 - 105 + 22;
-  points[0].Y = LCD_Y_SIZE / 2 - 18;
-  points[1].X = LCD_X_SIZE / 2 - 105 + 2;
-  points[1].Y = LCD_Y_SIZE / 2 - 7;
-  points[2].X = LCD_X_SIZE / 2 - 105 + 2;
-  points[2].Y = LCD_Y_SIZE / 2 - 18;
-  points[3].X = LCD_X_SIZE / 2 - 105 - 30;
-  points[3].Y = LCD_Y_SIZE / 2;
-  points[4].X = LCD_X_SIZE / 2 - 105 + 2;
-  points[4].Y = LCD_Y_SIZE / 2 + 18;
-  points[5].X = LCD_X_SIZE / 2 - 105 + 2;
-  points[5].Y = LCD_Y_SIZE / 2 + 7;
-  points[6].X = LCD_X_SIZE / 2 - 105 + 22;
-  points[6].Y = LCD_Y_SIZE / 2 + 18;
-  BSP_LCD_FillPolygon(points, 7);
-
-  // swapping play/stop?
-  draw_play_button();
-}
-
-void draw_title(uint8_t *title)
-{
-
-  BSP_LCD_SelectLayer(0);
-  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-  BSP_LCD_DisplayStringAt(LCD_X_SIZE / 2, LCD_Y_SIZE / 2 + 53 + 20, title, CENTER_MODE);
-}
-*/
-//static TS_StateTypeDef TS_State;
-
-int initialize_touchscreen(void)
-{
-  uint8_t status = 0;
-  status = BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
-  if (status != TS_OK)
-    return -1;
-  return 0;
 }
 
 /* USER CODE END 0 */
@@ -1713,27 +1493,6 @@ static void http_server_netconn_thread(void const *arg)
   }
 }
 
-/*
-#define FILE_BUFFER_SIZE 8192
-char file_buff[FILE_BUFFER_SIZE];
-int bytesLeft = 0;
-char *file_buff_ptr;
-
-#define DMA_BUFFER_SIZE 8192
-short processing_buff[DMA_BUFFER_SIZE / 2];
-short *processing_buff_ptr;
-int processing_buff_offs = 0;
-
-char dma_buff[DMA_BUFFER_SIZE];
-
-enum
-{
-  BUFFER_OFFSET_NONE = 0,
-  BUFFER_OFFSET_HALF,
-  BUFFER_OFFSET_FULL,
-};
-*/
-
 void BSP_AUDIO_OUT_TransferComplete_CallBack(void)
 {
   dma_buff_offs = BUFFER_OFFSET_FULL;
@@ -1743,128 +1502,6 @@ void BSP_AUDIO_OUT_HalfTransfer_CallBack(void)
 {
   dma_buff_offs = BUFFER_OFFSET_HALF;
 }
-
-//uint8_t volume = 30; 
-
-/*
-void process_callback(int dma_offset)
-{
-  while (processing_buff_offs < DMA_BUFFER_SIZE / 4)
-  {
-    int offset = MP3FindSyncWord((unsigned char *)file_buff_ptr, bytesLeft);
-      bytesLeft -= offset;
-      file_buff_ptr += offset;
-      int err = MP3Decode(hMP3Decoder, (unsigned char **)&file_buff_ptr, (int *)&bytesLeft, processing_buff_ptr, 0);
-      if (err) xprintf("BLAD: %d\n", err);
-      MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
-      processing_buff_offs += mp3FrameInfo.outputSamps;
-      processing_buff_ptr = processing_buff + processing_buff_offs;
-  }
-  memcpy(dma_buff + dma_offset, processing_buff, DMA_BUFFER_SIZE / 2);
-  memcpy(file_buff, file_buff_ptr, bytesLeft);
-  memcpy(processing_buff, &processing_buff[DMA_BUFFER_SIZE / 4], (processing_buff_offs - DMA_BUFFER_SIZE / 4) * 2);
-  file_buff_ptr = file_buff + bytesLeft;
-  int br;
-  if (f_read(&file, file_buff_ptr, (FILE_BUFFER_SIZE - bytesLeft), (void *)&br) != F_OK)
-  {
-    xprintf("ups\n");
-  }
-  file_buff_ptr = file_buff;
-  bytesLeft += br;
-  processing_buff_offs -= DMA_BUFFER_SIZE / 4;
-  processing_buff_ptr = processing_buff + processing_buff_offs;
-  dma_buff_offs = BUFFER_OFFSET_NONE;
-}
-*/
-/*
-void play_file(char* file_name)
-{
-  FRESULT res;
-
-  res = f_open(&file, file_name, FA_READ);
-
-  if (res == FR_OK)
-  {
-    xprintf("mp3 file open OK\n");
-  }
-  else
-  {
-    xprintf("mp3 file open ERROR, res = %d\n", res);
-    while (1)
-      ;
-  }
-
-  
-  file_buff_ptr = file_buff;
-  if (f_read(&file, file_buff_ptr, FILE_BUFFER_SIZE, (void *)&bytesLeft) != F_OK)
-  {
-    xprintf("ups\n");
-  }
-  processing_buff_ptr = processing_buff;
-  for (;;)
-  {
-
-    char key = inkey();
-    switch(key){
-      case 'a':
-        BSP_AUDIO_OUT_SetVolume(volume<100 ? ++volume : volume);
-        break;
-      case 'z':
-        BSP_AUDIO_OUT_SetVolume(volume>0 ? --volume : volume);
-        break;
-      case 'r':
-        BSP_AUDIO_OUT_Resume();
-        break;
-      case 'p':
-        BSP_AUDIO_OUT_Pause();
-        break;
-    }
-
-    BSP_TS_GetState(&TS_State);
-    if (TS_State.touchDetected)
-    {
-      if ((TS_State.touchX[0] < 290) && (TS_State.touchX[0] > 190) && (TS_State.touchY[0] < 186) && (TS_State.touchY[0] > 86))
-      {
-        xprintf("play command...\n");
-        if (player_state)
-        {
-          xprintf("already playing\n");
-        }
-        else
-        {
-          player_state = 1;
-          BSP_AUDIO_OUT_Play((uint16_t *)&dma_buff[0], DMA_BUFFER_SIZE);
-          dma_buff_offs = BUFFER_OFFSET_NONE;
-          vTaskDelay(1000);
-        }
-      }
-    }
-    if (player_state)
-    {
-      if (dma_buff_offs == BUFFER_OFFSET_HALF)
-      {
-        process_callback(0);
-      }
-
-      if (dma_buff_offs == BUFFER_OFFSET_FULL)
-      {
-        process_callback(DMA_BUFFER_SIZE / 2);
-      }
-
-      if (bytesLeft == 0)
-      {
-        xprintf("stop at eof\n");
-        BSP_AUDIO_OUT_Stop(CODEC_PDWN_SW);
-        player_state = 0;
-      }
-    } //if(player_state)
-
-    vTaskDelay(2);
-  }
-}
-*/
-
-// https://vectr.com/crossix/aGqzpq926
 
 /* USER CODE END 4 */
 
@@ -1877,9 +1514,12 @@ void play_file(char* file_name)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const *argument)
 {
-  lcd_start();
-  draw_background();
-  initialize_touchscreen();
+  if (xTaskCreate(&StartTouchTask, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL) == pdPASS)
+  {
+    xprintf("Created touch screen task\n");
+  }
+
+  vTaskDelay(1000);
 
   /* init code for FATFS */
   MX_FATFS_Init();
@@ -1915,8 +1555,8 @@ void StartDefaultTask(void const *argument)
   }
   BSP_AUDIO_OUT_SetAudioFrameSlot(CODEC_AUDIOFRAME_SLOT_02);
   hMP3Decoder = MP3InitDecoder();
-
-  play_file("1:/test_1k.mp3");
+  read_directory();
+  play_directory();
   while(1){}
 
 

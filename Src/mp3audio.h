@@ -11,6 +11,7 @@
 #include "usb_host.h"
 #include "wm8994/wm8994.h"
 #include "stm32f7xx_hal.h"
+#include "screen_refresh.h"
 
 #define FILE_BUFFER_SIZE 8192
 #define DMA_BUFFER_SIZE 8192
@@ -28,6 +29,9 @@ int processing_buff_offs;
 
 HMP3Decoder hMP3Decoder;
 MP3FrameInfo mp3FrameInfo;
+char FILES[20][100];
+int FILE_COUNTER;
+int CURRENT_FILE;
 FIL file;
 
 enum
@@ -41,11 +45,8 @@ extern ApplicationTypeDef Appli_state;
 uint8_t player_state;
 uint8_t dma_buff_offs;
 
-TS_StateTypeDef TS_State;
-
-void play_file(char* file_name);
+void read_directory();
 void process_callback(int dma_offset);
-void play_file(char *file_name);
-
+void play_directory();
 
 #endif
