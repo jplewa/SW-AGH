@@ -51,7 +51,6 @@
 #include "stm32f7xx_hal.h"
 #include "cmsis_os.h"
 #include "fatfs.h"
-#include "lwip.h"
 #include "usb_host.h"
 
 /* USER CODE BEGIN Includes */
@@ -69,16 +68,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-
-#include "lwip/opt.h"
-#include "lwip/api.h"
-#include "lwip/apps/fs.h"
-#include "lwip/dhcp.h"
-#include "lwip/tcpip.h"
-#include "lwip/netdb.h"
-#include "lwip/sockets.h"
-
-#include "lwip.h"
 
 #include "wm8994/wm8994.h"
 
@@ -1403,8 +1392,8 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-static char response[500];
-
+// static char response[500];
+/*
 //based on available code examples
 static void http_server_serve(struct netconn *conn)
 {
@@ -1413,8 +1402,8 @@ static void http_server_serve(struct netconn *conn)
   char *buf;
   u16_t buflen;
 
-  /* Read the data from the port, blocking if nothing yet there. 
-   We assume the request (the part we care about) is in one netbuf */
+   // Read the data from the port, blocking if nothing yet there. 
+   // We assume the request (the part we care about) is in one netbuf
   recv_err = netconn_recv(conn, &inbuf);
 
   if (recv_err == ERR_OK)
@@ -1423,8 +1412,8 @@ static void http_server_serve(struct netconn *conn)
     {
       netbuf_data(inbuf, (void **)&buf, &buflen);
 
-      /* Is this an HTTP GET command? (only check the first 5 chars, since
-      there are other formats for GET, and we're keeping it very simple )*/
+      // Is this an HTTP GET command? (only check the first 5 chars, since
+      // there are other formats for GET, and we're keeping it very simple )
       if ((buflen >= 5) && (strncmp(buf, "GET /", 5) == 0))
       {
         response[0] = 0;
@@ -1447,15 +1436,17 @@ static void http_server_serve(struct netconn *conn)
       }
     }
   }
-  /* Close the connection (server closes in HTTP) */
+  // Close the connection (server closes in HTTP)
   netconn_close(conn);
 
-  /* Delete the buffer (netconn_recv gives us ownership,
-   so we have to make sure to deallocate the buffer) */
+   // Delete the buffer (netconn_recv gives us ownership,
+   // so we have to make sure to deallocate the buffer)
   netbuf_delete(inbuf);
 }
+*/
 
 //based on available code examples
+/*
 static void http_server_netconn_thread(void const *arg)
 {
   struct netconn *conn, *newconn;
@@ -1463,35 +1454,36 @@ static void http_server_netconn_thread(void const *arg)
 
   xprintf("http_server_netconn_thread\n");
 
-  /* Create a new TCP connection handle */
+  // Create a new TCP connection handle
   conn = netconn_new(NETCONN_TCP);
 
   if (conn != NULL)
   {
-    /* Bind to port 80 (HTTP) with default IP address */
+    // Bind to port 80 (HTTP) with default IP address
     err = netconn_bind(conn, NULL, 80);
 
     if (err == ERR_OK)
     {
-      /* Put the connection into LISTEN state */
+      // Put the connection into LISTEN state
       netconn_listen(conn);
 
       while (1)
       {
-        /* accept any icoming connection */
+        // accept any icoming connection
         accept_err = netconn_accept(conn, &newconn);
         if (accept_err == ERR_OK)
         {
-          /* serve connection */
+          // serve connection
           http_server_serve(newconn);
 
-          /* delete connection */
+          // delete connection
           netconn_delete(newconn);
         }
       }
     }
   }
 }
+*/
 
 void BSP_AUDIO_OUT_TransferComplete_CallBack(void)
 {
@@ -1514,49 +1506,47 @@ void BSP_AUDIO_OUT_HalfTransfer_CallBack(void)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void const *argument)
 {
-  if (xTaskCreate(&StartTouchTask, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL) == pdPASS)
-  {
-    xprintf("Created touch screen task\n");
-  }
-
-  vTaskDelay(1000);
-
   /* init code for FATFS */
   MX_FATFS_Init();
 
   /* init code for USB_HOST */
   MX_USB_HOST_Init();
 
-  /* init code for LWIP */
-  MX_LWIP_Init();
-
   /* USER CODE BEGIN 5 */
-  osThreadDef(netconn_thread, http_server_netconn_thread, osPriorityNormal, 0, 1024);
-  netconn_thread_handle = osThreadCreate(osThread(netconn_thread), NULL);
 
   vTaskDelay(1000);
 
-  xprintf("waiting for USB mass storage\n");
-  //MP3InitDecoder();
+  xprintf("Waiting for USB mass storage");
   do
   {
     xprintf(".");
     vTaskDelay(250);
   } while (Appli_state != APPLICATION_READY);
 
+  xprintf("\nUSB mass storage initialized...\n");
 
-  if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_HEADPHONE1, volume, AUDIO_FREQUENCY_44K) == 0)
+  if (xTaskCreate(&start_touch_task, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL) != pdPASS)
   {
-    xprintf(" audio init OK\n");
+    while(1){}
   }
-  else
+  xprintf("Created touch screen task...\n");
+  vTaskDelay(1000);
+
+  if (init_mp3())
   {
-    xprintf("audio init ERROR\n");
+    while(1){}
   }
-  BSP_AUDIO_OUT_SetAudioFrameSlot(CODEC_AUDIOFRAME_SLOT_02);
-  hMP3Decoder = MP3InitDecoder();
-  read_directory();
+  xprintf("Audio initialized...\n");
+  
+  if (read_directory("1:"))
+  {
+    while(1){}
+  }
+  xprintf("Playlist initialized...\n");
+  xprintf("Player ready!\n");
+
   play_directory();
+
   while(1){}
 
 

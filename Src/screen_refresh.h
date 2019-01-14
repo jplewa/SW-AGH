@@ -14,7 +14,11 @@
 #include "stm32f7xx_hal.h"
 #include "mp3audio.h"
 
-typedef enum {
+TS_StateTypeDef TS_State;
+
+/* player state enum */
+typedef enum
+{
     STOP_PRESSED,
     STOPPED,
     PLAY_PRESSED,
@@ -32,10 +36,9 @@ typedef enum {
     VOL_DOWN_PRESSED,
 } player_states;
 
-TS_StateTypeDef TS_State;
+volatile player_states player_state;
+volatile int redraw_title;
 
-volatile player_states touch_sound_communication;
-
-void StartTouchTask(void *argument);
+void start_touch_task(void *argument);
 
 #endif

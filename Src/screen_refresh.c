@@ -1,7 +1,6 @@
 #include "screen_refresh.h"
 #include "mp3audio.h"
 
-//partially based on available code examples
 static void lcd_start(void)
 {
   /* LCD Initialization */
@@ -9,7 +8,6 @@ static void lcd_start(void)
 
   /* LCD Initialization */
   BSP_LCD_LayerDefaultInit(0, (unsigned int)0xC0000000);
-  //BSP_LCD_LayerDefaultInit(1, (unsigned int)lcd_image_bg+(LCD_X_SIZE*LCD_Y_SIZE*4));
   BSP_LCD_LayerDefaultInit(1, (unsigned int)0xC0000000 + (LCD_X_SIZE * LCD_Y_SIZE * 4));
 
   /* Enable the LCD */
@@ -46,15 +44,19 @@ int initialize_touchscreen(void)
   return 0;
 }
 
-void StartTouchTask(void* argument)
+void start_touch_task(void* argument)
 {
     lcd_start();
     draw_background();
     draw_volume(30);
     initialize_touchscreen();
-    touch_sound_communication = STOPPED;
+    player_state = STOPPED;
     while (1)
     {
+        if (redraw_title){
+            draw_title(FILES[CURRENT_FILE]);
+            redraw_title = 0;
+        }
         vTaskDelay(200);
         BSP_TS_GetState(&TS_State);
         if (TS_State.touchDetected)
@@ -63,28 +65,32 @@ void StartTouchTask(void* argument)
             {
                 if ((TS_State.touchX[0] < play_button_X + big_button_radius) && (TS_State.touchX[0] > play_button_X - big_button_radius))
                 {
-                    if (touch_sound_communication == PLAYING)
+                    switch (player_state)
                     {
-                        touch_sound_communication = PAUSE_PRESSED;
-                        draw_play_button();
-                    }
-                    else if (touch_sound_communication == PAUSED)
-                    {
-                        touch_sound_communication = RESUME_PRESSED;
-                        draw_pause_button();
-                    }
-                    else if (touch_sound_communication == STOPPED)
-                    {
-                        touch_sound_communication = PLAY_PRESSED;
-                        draw_title(FILES[CURRENT_FILE]);
-                        draw_pause_button();
+                        case PLAYING:
+                            player_state = PAUSE_PRESSED;
+                            draw_play_button();
+                            break;
+                        
+                        case PAUSED:
+                            player_state = RESUME_PRESSED;
+                            draw_pause_button();
+                            break;
+                        
+                        case STOPPED:
+                            player_state = PLAY_PRESSED;
+                            draw_pause_button();
+                            break;
+                        
+                        default:
+                            break;
                     }
                 }
                 else if ((TS_State.touchX[0] < stop_button_X + big_button_radius) && (TS_State.touchX[0] > stop_button_X - big_button_radius))
                 {
-                    if ((touch_sound_communication == PLAYING) || (touch_sound_communication == STOPPED))
+                    if ((player_state == PLAYING) || (player_state == STOPPED))
                     {
-                        touch_sound_communication = STOP_PRESSED;
+                        player_state = STOP_PRESSED;
                         draw_play_button();
                     }
                 }
@@ -92,68 +98,64 @@ void StartTouchTask(void* argument)
                 {
                     if ((TS_State.touchX[0] < skip_left_X + medium_button_radius) && (TS_State.touchX[0] > skip_left_X - medium_button_radius))
                     {
-                        if (touch_sound_communication == PLAYING)
+                        switch (player_state)
                         {
-                            touch_sound_communication = PREV_PRESSED_PLAYING;
-                            draw_pause_button();
-                            int new_file = (CURRENT_FILE - 1) % FILE_COUNTER;
-                            if (new_file < 0) new_file += FILE_COUNTER;
-                            draw_title(FILES[new_file]);                        }
-                        if (touch_sound_communication == PAUSED)
-                        {
-                            touch_sound_communication = PREV_PRESSED_PAUSED;
-                            draw_play_button();
-                            int new_file = (CURRENT_FILE - 1) % FILE_COUNTER;
-                            if (new_file < 0) new_file += FILE_COUNTER;
-                            draw_title(FILES[new_file]);
+                            case PLAYING:
+                                player_state = PREV_PRESSED_PLAYING;
+                                draw_pause_button();
+                                break;
+                            
+                            case PAUSED:
+                                player_state = PREV_PRESSED_PAUSED;
+                                draw_play_button();
+                                break;
+                        
+                            case STOPPED:
+                                player_state = PREV_PRESSED_STOPPED;
+                                draw_play_button();
+                                break;
+                            
+                            default:
+                                break;                            
                         }
-                        if (touch_sound_communication == STOPPED)
-                        {
-                            touch_sound_communication = PREV_PRESSED_STOPPED;
-                            draw_play_button();
-                            int new_file = (CURRENT_FILE - 1) % FILE_COUNTER;
-                            if (new_file < 0) new_file += FILE_COUNTER;
-                            draw_title(FILES[new_file]);                        
-                        }
-                        //vTaskDelay(200);
                     }
                     if ((TS_State.touchX[0] < skip_right_X + medium_button_radius) && (TS_State.touchX[0] > skip_right_X - medium_button_radius))
                     {
-                        if (touch_sound_communication == PLAYING)
+                        switch(player_state)
                         {
-                            touch_sound_communication = NEXT_PRESSED_PLAYING;
-                            draw_pause_button();
-                            int new_file = (CURRENT_FILE + 1) % FILE_COUNTER;
-                            draw_title(FILES[new_file]);                        }
-                        if (touch_sound_communication == PAUSED)
-                        {
-                            touch_sound_communication = NEXT_PRESSED_PAUSED;
-                            draw_play_button();
-                            int new_file = (CURRENT_FILE + 1) % FILE_COUNTER;
-                            draw_title(FILES[new_file]);
+                            case PLAYING:
+                                player_state = NEXT_PRESSED_PLAYING;
+                                draw_pause_button();
+                                break;
+
+                            case PAUSED:
+                                player_state = NEXT_PRESSED_PAUSED;
+                                draw_play_button();
+                                break;
+                            
+                            case STOPPED:
+                                player_state = NEXT_PRESSED_STOPPED;
+                                draw_play_button();
+                                break;
+
+                            default:
+                                break;                     
                         }
-                        if (touch_sound_communication == STOPPED)
-                        {
-                            touch_sound_communication = NEXT_PRESSED_STOPPED;
-                            draw_play_button();
-                            int new_file = (CURRENT_FILE + 1) % FILE_COUNTER;
-                            draw_title(FILES[new_file]);                        
-                        }
-                        //vTaskDelay(200);
                     }
                 }
             }
             else if ((TS_State.touchY[0] < small_button_Y + small_button_radius) && (TS_State.touchY[0] > small_button_Y - small_button_radius))
             {
+                if (player_state == PLAYING)
                 {
                     if ((TS_State.touchX[0] < minus_button_X + small_button_radius) && (TS_State.touchX[0] > minus_button_X - small_button_radius))
                     {
-                        touch_sound_communication = VOL_DOWN_PRESSED;
+                        player_state = VOL_DOWN_PRESSED;
                         draw_volume(volume);
                     }
                     else if ((TS_State.touchX[0] < plus_button_X + small_button_radius) && (TS_State.touchX[0] > plus_button_X - small_button_radius))
                     {
-                        touch_sound_communication = VOL_UP_PRESSED;
+                        player_state = VOL_UP_PRESSED;
                         draw_volume(volume);
                     }
                 }

@@ -13,27 +13,35 @@
 #include "stm32f7xx_hal.h"
 #include "screen_refresh.h"
 
+/* buffer sizes */
 #define FILE_BUFFER_SIZE 8192
 #define DMA_BUFFER_SIZE 8192
 
-uint8_t volume;
-
+/* buffers */
 char file_buff[FILE_BUFFER_SIZE];
 short processing_buff[DMA_BUFFER_SIZE / 2];
 char dma_buff[DMA_BUFFER_SIZE];
 
-int bytesLeft;
+/* buffer pointers and offsets */
 char *file_buff_ptr;
 short *processing_buff_ptr;
 int processing_buff_offs;
+int bytes_left;
+uint8_t dma_buff_offs;
 
+/* audio variables */
+uint8_t volume;
 HMP3Decoder hMP3Decoder;
 MP3FrameInfo mp3FrameInfo;
+
+/* file system variables */
+extern ApplicationTypeDef Appli_state;
 char FILES[20][100];
 int FILE_COUNTER;
 int CURRENT_FILE;
 FIL file;
 
+/* DMA progress enum */
 enum
 {
   BUFFER_OFFSET_NONE = 0,
@@ -41,12 +49,11 @@ enum
   BUFFER_OFFSET_FULL,
 };
 
-extern ApplicationTypeDef Appli_state;
-uint8_t player_state;
-uint8_t dma_buff_offs;
-
-void read_directory();
-void process_callback(int dma_offset);
+/* MP3 API functions */
+int init_mp3();
+int read_directory();
 void play_directory();
+int next_file();
+int prev_file();
 
 #endif

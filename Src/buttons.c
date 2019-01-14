@@ -1,10 +1,8 @@
 #include "buttons.h"
 
-
 // size 480 x 272 px
 void draw_background()
 {
-
 	// Select the LCD Background Layer
 	BSP_LCD_SelectLayer(0);
 	BSP_LCD_Clear(BG_COLOR);
@@ -17,31 +15,29 @@ void draw_background()
 	draw_next_button();
 	draw_minus_button();
 	draw_plus_button();
-
 }
 
-
-void initialize_button_values(){
-    big_button_radius = 50;
-    medium_button_radius = 40;
+void initialize_button_values()
+{
+	big_button_radius = 50;
+	medium_button_radius = 40;
 	small_button_radius = 25;
-    big_button_Y = 80 + big_button_radius; // center of stop/play/pause
-    medium_button_Y = 80 + big_button_radius;
+	big_button_Y = 80 + big_button_radius; // center of stop/play/pause
+	medium_button_Y = 80 + big_button_radius;
 	small_button_Y = big_button_Y + big_button_radius + small_button_radius + 20;
-    big_button_distance = 20;
+	big_button_distance = 20;
 	medium_button_distance = 25;
 	small_button_distance = 60;
-    stop_button_X = LCD_X_SIZE/2 - big_button_radius - big_button_distance/2;
-    play_button_X = LCD_X_SIZE/2 + big_button_radius + big_button_distance/2;
-    skip_left_X = medium_button_distance + medium_button_radius;
-    skip_right_X = LCD_X_SIZE - medium_button_distance - medium_button_radius;
-	minus_button_X = LCD_X_SIZE/2 - small_button_radius - small_button_distance/2;
-	plus_button_X = LCD_X_SIZE/2 + small_button_radius + small_button_distance/2;
+	stop_button_X = LCD_X_SIZE / 2 - big_button_radius - big_button_distance / 2;
+	play_button_X = LCD_X_SIZE / 2 + big_button_radius + big_button_distance / 2;
+	skip_left_X = medium_button_distance + medium_button_radius;
+	skip_right_X = LCD_X_SIZE - medium_button_distance - medium_button_radius;
+	minus_button_X = LCD_X_SIZE / 2 - small_button_radius - small_button_distance / 2;
+	plus_button_X = LCD_X_SIZE / 2 + small_button_radius + small_button_distance / 2;
 }
 
-
-void draw_play_button(){
-
+void draw_play_button()
+{
 	BSP_LCD_SetTextColor(OUTER_SHADE_COLOR);
 	BSP_LCD_FillCircle(play_button_X, big_button_Y, big_button_radius + 3);
 
@@ -67,9 +63,8 @@ void draw_play_button(){
 	BSP_LCD_FillPolygon(points, 3);
 }
 
-
-void draw_stop_button(){
-
+void draw_stop_button()
+{
 	BSP_LCD_SetTextColor(OUTER_SHADE_COLOR);
 	BSP_LCD_FillCircle(stop_button_X, big_button_Y, big_button_radius + 3);
 
@@ -83,8 +78,8 @@ void draw_stop_button(){
 	BSP_LCD_FillRect(stop_button_X - 27, big_button_Y - 27, 54, 54);
 }
 
-void draw_pause_button(){
-
+void draw_pause_button()
+{
 	BSP_LCD_SetTextColor(OUTER_SHADE_COLOR);
 	BSP_LCD_FillCircle(play_button_X, big_button_Y, big_button_radius + 3);
 
@@ -93,16 +88,15 @@ void draw_pause_button(){
 
 	BSP_LCD_SetTextColor(INNER_SHADE_COLOR);
 	BSP_LCD_FillRect(play_button_X - 28, big_button_Y - 28, 22, 56);
-    BSP_LCD_FillRect(play_button_X + 6, big_button_Y - 28, 22, 56);
+	BSP_LCD_FillRect(play_button_X + 6, big_button_Y - 28, 22, 56);
 
 	BSP_LCD_SetTextColor(INNER_BUTTON_COLOR);
 	BSP_LCD_FillRect(play_button_X - 27, big_button_Y - 27, 20, 54);
-    BSP_LCD_FillRect(play_button_X + 7, big_button_Y - 27, 20, 54);
+	BSP_LCD_FillRect(play_button_X + 7, big_button_Y - 27, 20, 54);
 }
 
-
-void draw_previous_button(){
-
+void draw_previous_button()
+{
 	BSP_LCD_SetTextColor(OUTER_SHADE_COLOR);
 	BSP_LCD_FillCircle(skip_left_X, medium_button_Y, medium_button_radius + 2);
 	BSP_LCD_SetTextColor(OUTER_BUTTON_COLOR);
@@ -141,9 +135,8 @@ void draw_previous_button(){
 	BSP_LCD_FillPolygon(points, 7);
 }
 
-
-void draw_next_button(){
-
+void draw_next_button()
+{
 	BSP_LCD_SetTextColor(OUTER_SHADE_COLOR);
 	BSP_LCD_FillCircle(skip_right_X, medium_button_Y, medium_button_radius + 2);
 	BSP_LCD_SetTextColor(OUTER_BUTTON_COLOR);
@@ -180,12 +173,10 @@ void draw_next_button(){
 	points[6].X = skip_right_X - 22;
 	points[6].Y = medium_button_Y + 18;
 	BSP_LCD_FillPolygon(points, 7);
-
 }
 
-
-void draw_minus_button(){
-
+void draw_minus_button()
+{
 	BSP_LCD_SetTextColor(OUTER_SHADE_COLOR);
 	BSP_LCD_FillCircle(minus_button_X, small_button_Y, small_button_radius + 2);
 
@@ -199,9 +190,8 @@ void draw_minus_button(){
 	BSP_LCD_FillRect(minus_button_X - 13, small_button_Y - 4, 26, 8);
 }
 
-
-void draw_plus_button(){
-
+void draw_plus_button()
+{
 	BSP_LCD_SetTextColor(OUTER_SHADE_COLOR);
 	BSP_LCD_FillCircle(plus_button_X, small_button_Y, small_button_radius + 2);
 
@@ -217,9 +207,8 @@ void draw_plus_button(){
 	BSP_LCD_FillRect(plus_button_X - 4, small_button_Y - 13, 8, 26);
 }
 
-
-void draw_title(uint8_t *title){
-	// to nie dziala
+void draw_title(uint8_t *title)
+{
 	BSP_LCD_SetTextColor(BG_COLOR);
 	BSP_LCD_FillRect(0, 0, 480, 70);
 
@@ -228,21 +217,22 @@ void draw_title(uint8_t *title){
 	BSP_LCD_DisplayStringAt(0, big_button_Y - 100, title, CENTER_MODE);
 }
 
-void draw_volume(int volume){
+void draw_volume(int volume)
+{
 	char volume_string[4];
 	if (volume < 10)
 	{
 		sprintf(&volume_string[0], "00%d", volume);
 	}
-	if (volume < 100)
+	else if (volume < 100)
 	{
 		sprintf(&volume_string[0], "0%d", volume);
 	}
-	if (volume == 100)
+	else if (volume == 100)
 	{
 		sprintf(&volume_string[0], "100");
 	}
 	BSP_LCD_SelectLayer(0);
 	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-	BSP_LCD_DisplayStringAt(0, small_button_Y - 10, (unsigned char*) volume_string, CENTER_MODE);
+	BSP_LCD_DisplayStringAt(0, small_button_Y - 10, (unsigned char *)volume_string, CENTER_MODE);
 }
