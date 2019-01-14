@@ -36,21 +36,21 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
-Helix/mp3dec.c \
-Helix/real/buffers.c \
-Helix/real/bitstream.c \
-Helix/mp3tabs.c \
-Helix/real/scalfact.c \
-Helix/real/huffman.c \
-Helix/real/hufftabs.c \
-Helix/real/dqchan.c \
-Helix/real/dequant.c \
-Helix/real/imdct.c \
-Helix/real/subband.c \
-Helix/real/dct32.c \
-Helix/real/polyphase.c \
-Helix/real/trigtabs.c \
-Helix/real/stproc.c \
+Drivers/Helix/mp3dec.c \
+Drivers/Helix/real/buffers.c \
+Drivers/Helix/real/bitstream.c \
+Drivers/Helix/mp3tabs.c \
+Drivers/Helix/real/scalfact.c \
+Drivers/Helix/real/huffman.c \
+Drivers/Helix/real/hufftabs.c \
+Drivers/Helix/real/dqchan.c \
+Drivers/Helix/real/dequant.c \
+Drivers/Helix/real/imdct.c \
+Drivers/Helix/real/subband.c \
+Drivers/Helix/real/dct32.c \
+Drivers/Helix/real/polyphase.c \
+Drivers/Helix/real/trigtabs.c \
+Drivers/Helix/real/stproc.c \
 Src/main.c \
 Src/buttons.c \
 Src/mp3audio.c \
@@ -300,7 +300,7 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/LwIP/src/include/posix/sys \
 -IMiddlewares/Third_Party/LwIP/system/arch \
 -IDrivers/CMSIS/Include \
--IHelix \
+-IDrivers/Helix \
 
 
 # compile gcc flags
