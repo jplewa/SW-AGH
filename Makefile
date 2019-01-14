@@ -227,7 +227,7 @@ startup_stm32f746xx.s
 # binaries
 #######################################
 
-GCC_PATH=/home/julia/opt/gnu-mcu-eclipse/arm-none-eabi-gcc/7.3.1-1.1-20180724-0637/bin
+GCC_PATH=
 PREFIX=arm-none-eabi-
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.

@@ -71,10 +71,6 @@
 
 #include "wm8994/wm8994.h"
 
-#include "pub/mp3dec.h"
-#include "pub/mp3common.h"
-
-//#include "buttons.h"
 #include "mp3audio.h"
 #include "screen_refresh.h"
 
@@ -1548,7 +1544,6 @@ void StartDefaultTask(void const *argument)
   play_directory();
 
   while(1){}
-
 
   /* USER CODE END 5 */
 }
