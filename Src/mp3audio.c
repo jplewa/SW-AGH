@@ -45,16 +45,19 @@ int read_directory(char *path)
         xprintf("ERROR: Failed to read directory %s\n", path);
         return -1;
     }
-    while (res == FR_OK && fno.fname[0] != 0)
+    while (res == FR_OK && fno.fname[0] != 0 && FILE_COUNTER < NUMBER_OF_FILES)
     {
-        for (int i = 0; fno.fname[i] != '\0' && i < 255; i++)
+        for (int i = 0; fno.fname[i] != '\0'; i++)
         {
             if ((fno.fname[i] == '.') && (fno.fname[i + 1] == 'm') && (fno.fname[i + 2] == 'p') && (fno.fname[i + 3] == '3'))
             {
-                memset(FILES[FILE_COUNTER], 0, 100);
-                snprintf(FILES[FILE_COUNTER], (i + 8), "1:/%s", fno.fname);
-                FILE_COUNTER++;
-                break;
+                if (f_open(&file, fno.fname, FA_READ) == FR_OK)
+                {
+                    memset(FILES[FILE_COUNTER], 0, FILE_NAME_LENGTH);
+                    snprintf(FILES[FILE_COUNTER], (i + 8), "%s%s", path, fno.fname);
+                    FILE_COUNTER++;
+                    f_close(&file);
+                }
             }
         }
         res = f_readdir(&dir, &fno);
@@ -317,17 +320,9 @@ void play_directory()
 {
     volume = 30;
 
-    int counter = 0;
     int err = 0;
     
-    // in case of broken files
-    while (start_reading_file())
-    {
-        if (++counter >= FILE_COUNTER)
-        {
-            err = -1;
-        }
-    }
+    err = start_reading_file();
     
     if (err)
     {
@@ -335,12 +330,11 @@ void play_directory()
     }
     
     redraw_title = 1;
+
     vTaskDelay(2);
 
     while (1)
     {
-        counter = 0;
-
         switch (player_state)
         {
             case PAUSED:
@@ -354,10 +348,6 @@ void play_directory()
             case PLAY_PRESSED:
                 err = mp3_play();
                 redraw_title = 1;
-                if (err)
-                {
-                    player_state = NEXT_PRESSED_PLAYING;
-                }
                 break;
 
             case PAUSE_PRESSED:
@@ -377,56 +367,28 @@ void play_directory()
                 break;
 
             case NEXT_PRESSED_PLAYING:
-                while (next_playing())
-                {
-                    if (++counter >= FILE_COUNTER)
-                    {
-                        err = -1;
-                        break;
-                    }
-                }
+                err = next_playing();
                 redraw_title = 1;
                 break;
 
             case NEXT_PRESSED_PAUSED:
-                while (next_paused())
-                {
-                    if (++counter >= FILE_COUNTER)
-                    {
-                        err = -1;
-                        break;
-                    }
-                }
+                err = next_paused();
                 redraw_title = 1;
                 break;
 
             case NEXT_PRESSED_STOPPED:
-                player_state = STOPPED;
                 CURRENT_FILE = next_file();
+                player_state = STOPPED;
                 redraw_title = 1;
                 break;
 
             case PREV_PRESSED_PLAYING:
-                while (prev_playing())
-                {
-                    if (++counter >= FILE_COUNTER)
-                    {
-                        err = -1;
-                        break;
-                    }
-                }
+                err = prev_playing();
                 redraw_title = 1;
                 break;
 
             case PREV_PRESSED_PAUSED:
-                while (prev_paused())
-                {
-                    if (++counter >= FILE_COUNTER)
-                    {
-                        err = -1;
-                        break;
-                    }
-                }
+                err = prev_paused();
                 redraw_title = 1;
                 break;
 
@@ -449,15 +411,13 @@ void play_directory()
 
                 if (bytes_left == 0)
                 {
-                    do
+                    err = mp3_stop();
+                    if (!err)
                     {
-                        err = mp3_stop();
                         CURRENT_FILE = next_file();
                         err = mp3_play();
-                        counter++;
-                    } while(err || counter >= FILE_COUNTER);
-
-                    redraw_title = 1;
+                        redraw_title = 1;
+                    }
                 }
                 break;
 

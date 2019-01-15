@@ -17,6 +17,10 @@
 #define FILE_BUFFER_SIZE 8192
 #define DMA_BUFFER_SIZE 8192
 
+/* file name sizes */
+#define NUMBER_OF_FILES 20
+#define FILE_NAME_LENGTH 100
+
 /* buffers */
 char file_buff[FILE_BUFFER_SIZE];
 short processing_buff[DMA_BUFFER_SIZE / 2];
@@ -36,7 +40,7 @@ MP3FrameInfo mp3FrameInfo;
 
 /* file system variables */
 extern ApplicationTypeDef Appli_state;
-char FILES[20][100];
+char FILES[NUMBER_OF_FILES][FILE_NAME_LENGTH];
 int FILE_COUNTER;
 int CURRENT_FILE;
 FIL file;

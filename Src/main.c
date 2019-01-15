@@ -1534,7 +1534,7 @@ void StartDefaultTask(void const *argument)
   }
   xprintf("Audio initialized...\n");
   
-  if (read_directory("1:"))
+  if (read_directory("1:/"))
   {
     while(1){}
   }

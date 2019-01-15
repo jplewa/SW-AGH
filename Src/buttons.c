@@ -15,6 +15,8 @@ void draw_background()
 	draw_next_button();
 	draw_minus_button();
 	draw_plus_button();
+
+	draw_volume(volume);
 }
 
 void initialize_button_values()

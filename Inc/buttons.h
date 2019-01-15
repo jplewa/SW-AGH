@@ -2,6 +2,7 @@
 #define __BUTTONS_H
 
 #include "stm32746g_discovery_lcd.h"
+#include "mp3audio.h"
 
 /* color constants */
 #define BG_COLOR ((uint32_t)0xFF241593)

@@ -36,6 +36,7 @@ typedef enum
     VOL_DOWN_PRESSED,
 } player_states;
 
+/* GUI <-> audio processing communication */
 volatile player_states player_state;
 volatile int redraw_title;
 
