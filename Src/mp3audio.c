@@ -52,7 +52,7 @@ int read_directory(char *path)
             if ((fno.fname[i] == '.') && (fno.fname[i + 1] == 'm') && (fno.fname[i + 2] == 'p') && (fno.fname[i + 3] == '3'))
             {
                 memset(FILES[FILE_COUNTER], 0, 100);
-                snprintf(FILES[FILE_COUNTER], (i + 8), "0:/%s", fno.fname);
+                snprintf(FILES[FILE_COUNTER], (i + 8), "1:/%s", fno.fname);
                 FILE_COUNTER++;
                 break;
             }
