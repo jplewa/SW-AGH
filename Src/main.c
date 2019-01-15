@@ -1523,28 +1523,29 @@ void StartDefaultTask(void const *argument)
 
   if (xTaskCreate(&start_touch_task, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL) != pdPASS)
   {
-    while(1){}
+    while(1) {}
   }
   xprintf("Created touch screen task...\n");
   vTaskDelay(1000);
 
   if (init_mp3())
   {
-    while(1){}
+    while(1) {}
   }
   xprintf("Audio initialized...\n");
   
   if (read_directory("1:/"))
   {
-    while(1){}
+    while(1) {}
   }
   xprintf("Playlist initialized...\n");
   xprintf("Player ready!\n");
 
-  play_directory();
-
-  while(1){}
-
+  while(1)
+  {
+      play_directory();
+  }
+  
   /* USER CODE END 5 */
 }
 

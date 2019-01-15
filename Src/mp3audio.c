@@ -123,7 +123,10 @@ int next_file()
 int prev_file()
 {
     int file_number = CURRENT_FILE - 1;
-    if (file_number < 0) file_number += FILE_COUNTER;
+    if (file_number < 0) 
+    {
+        file_number += FILE_COUNTER;
+    }
     return file_number;
 }
 
@@ -326,7 +329,7 @@ void play_directory()
     
     if (err)
     {
-        while (1) {}
+        return;
     }
     
     redraw_title = 1;
@@ -430,5 +433,4 @@ void play_directory()
         }
         vTaskDelay(2);
     }
-    while(1) {}
 }
