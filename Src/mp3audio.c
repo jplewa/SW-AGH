@@ -51,12 +51,22 @@ int read_directory(char *path)
         {
             if ((fno.fname[i] == '.') && (fno.fname[i + 1] == 'm') && (fno.fname[i + 2] == 'p') && (fno.fname[i + 3] == '3'))
             {
-                if (f_open(&file, fno.fname, FA_READ) == FR_OK)
+                memset(FILES[FILE_COUNTER], 0, FILE_NAME_LENGTH);
+                snprintf(FILES[FILE_COUNTER], (i + 8), "%s%s", path, fno.fname);
+                if (f_open(&file, FILES[FILE_COUNTER], FA_READ) == FR_OK)
+                {
+                    if (f_close(&file) == FR_OK)
+                    {
+                        FILE_COUNTER++;
+                    }
+                    else
+                    {
+                        memset(FILES[FILE_COUNTER], 0, FILE_NAME_LENGTH);
+                    }
+                }
+                else
                 {
                     memset(FILES[FILE_COUNTER], 0, FILE_NAME_LENGTH);
-                    snprintf(FILES[FILE_COUNTER], (i + 8), "%s%s", path, fno.fname);
-                    FILE_COUNTER++;
-                    f_close(&file);
                 }
             }
         }
@@ -321,8 +331,6 @@ int volume_down()
 
 void play_directory()
 {
-    volume = 30;
-
     int err = 0;
     
     err = start_reading_file();

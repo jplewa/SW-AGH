@@ -1521,6 +1521,8 @@ void StartDefaultTask(void const *argument)
 
   xprintf("\nUSB mass storage initialized...\n");
 
+  volume = 30;
+
   if (xTaskCreate(&start_touch_task, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL) != pdPASS)
   {
     while(1) {}
