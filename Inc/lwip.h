@@ -51,7 +51,7 @@
 #ifndef __mx_lwip_H
 #define __mx_lwip_H
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -76,7 +76,7 @@
 /* Global Variables ----------------------------------------------------------*/
 extern ETH_HandleTypeDef heth;
 
-/* LWIP init function */	
+/* LWIP init function */
 void MX_LWIP_Init(void);
 
 #if !WITH_RTOS
@@ -85,7 +85,7 @@ void MX_LWIP_Init(void);
  *   - Read a received packet from the Ethernet buffers 
  *   - Send it to the lwIP stack for handling
  *   - Handle timeouts if NO_SYS_NO_TIMERS not set
- */ 
+ */
 void MX_LWIP_Process(void);
 
 /* USER CODE END 1 */

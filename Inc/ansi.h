@@ -67,7 +67,7 @@
 #define  ANSI_FG_MAGENTA        "\033[0;35m"
 #define  ANSI_FG_CYAN           "\033[0;36m"
 #define  ANSI_FG_GRAY           "\033[0;37m"
-#define  ANSI_FG_DEFAULT        "\033[0;39m" 
+#define  ANSI_FG_DEFAULT        "\033[0;39m"
 
 #define  ANSI_FG_DKGRAY         "\033[1;30m"
 #define  ANSI_FG_LTRED          "\033[1;31m"

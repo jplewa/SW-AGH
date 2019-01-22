@@ -59,25 +59,25 @@ FIL USBHFile;       /* File object for USBH */
 
 /* USER CODE BEGIN Variables */
 
-/* USER CODE END Variables */    
+/* USER CODE END Variables */
 
-void MX_FATFS_Init(void) 
+void MX_FATFS_Init(void)
 {
-  /*## FatFS: Link the SD driver ###########################*/
-  retSD = FATFS_LinkDriver(&SD_Driver, SDPath);
-  /*## FatFS: Link the USBH driver ###########################*/
-  retUSBH = FATFS_LinkDriver(&USBH_Driver, USBHPath);
+    /*## FatFS: Link the SD driver ###########################*/
+    retSD = FATFS_LinkDriver(&SD_Driver, SDPath);
+    /*## FatFS: Link the USBH driver ###########################*/
+    retUSBH = FATFS_LinkDriver(&USBH_Driver, USBHPath);
 
-  /* USER CODE BEGIN Init */
-  /* additional user code for init */     
-  printf("SD card path: %s\n",SDPath);
-  printf("USB path: %s\n",USBHPath);
-  
-  
-  f_mount(&SDFatFS,USBHPath,0);
-  f_mount(&SDFatFS,SDPath,0);
-  
-  /* USER CODE END Init */
+    /* USER CODE BEGIN Init */
+    /* additional user code for init */
+    printf("SD card path: %s\n", SDPath);
+    printf("USB path: %s\n", USBHPath);
+
+
+    f_mount(&SDFatFS, USBHPath, 0);
+    f_mount(&SDFatFS, SDPath, 0);
+
+    /* USER CODE END Init */
 }
 
 /**
@@ -87,13 +87,13 @@ void MX_FATFS_Init(void)
   */
 DWORD get_fattime(void)
 {
-  /* USER CODE BEGIN get_fattime */
-  return 0;
-  /* USER CODE END get_fattime */  
+    /* USER CODE BEGIN get_fattime */
+    return 0;
+    /* USER CODE END get_fattime */
 }
 
 /* USER CODE BEGIN Application */
-     
+
 /* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

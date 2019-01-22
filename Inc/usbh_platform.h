@@ -51,7 +51,7 @@
 #define __USBH_PLATFORM_H__
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -61,7 +61,7 @@
 
 /* USER CODE END INCLUDE */
 
-void MX_DriverVbusFS(uint8_t state); 
+void MX_DriverVbusFS(uint8_t state);
 
 #ifdef __cplusplus
 }

@@ -27,7 +27,7 @@
 #include "stm32f7xx_hal_uart.h"
 #include "ansi.h"
 
-void debug_init(UART_HandleTypeDef* handler);
+void debug_init(UART_HandleTypeDef *handler);
 void debug_chr(char chr);
 int debug_test(void);
 char debug_inkey(void);

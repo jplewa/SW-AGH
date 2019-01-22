@@ -46,7 +46,7 @@
   *
   ******************************************************************************
   */
-  
+
 /* Includes ------------------------------------------------------------------*/
 #include "lwip.h"
 #include "lwip/init.h"
@@ -60,7 +60,7 @@
 /* USER CODE END 0 */
 /* Private function prototypes -----------------------------------------------*/
 /* ETH Variables initialization ----------------------------------------------*/
-void _Error_Handler(char * file, int line);
+void _Error_Handler(char *file, int line);
 
 /* USER CODE BEGIN 1 */
 
@@ -81,33 +81,38 @@ ip4_addr_t gw;
   */
 void MX_LWIP_Init(void)
 {
-  /* Initilialize the LwIP stack with RTOS */
-  tcpip_init( NULL, NULL );
+    /* Initilialize the LwIP stack with RTOS */
+    tcpip_init(NULL, NULL);
 
-  /* IP addresses initialization with DHCP (IPv4) */
-  ipaddr.addr = 0;
-  netmask.addr = 0;
-  gw.addr = 0;
+    /* IP addresses initialization with DHCP (IPv4) */
+    ipaddr.addr = 0;
+    netmask.addr = 0;
+    gw.addr = 0;
 
-  /* add the network interface (IPv4/IPv6) with RTOS */
-  netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
+    /* add the network interface (IPv4/IPv6) with RTOS */
+    netif_add(&gnetif,
+              &ipaddr,
+              &netmask,
+              &gw,
+              NULL,
+              &ethernetif_init,
+              &tcpip_input);
 
-  /* Registers the default network interface */
-  netif_set_default(&gnetif);
+    /* Registers the default network interface */
+    netif_set_default(&gnetif);
 
-  if (netif_is_link_up(&gnetif))
-  {
-    /* When the netif is fully configured this function must be called */
-    netif_set_up(&gnetif);
-  }
-  else
-  {
-    /* When the netif link is down this function must be called */
-    netif_set_down(&gnetif);
-  }
+    if (netif_is_link_up(&gnetif))
+    {
+        /* When the netif is fully configured this function must be called */
+        netif_set_up(&gnetif);
+    } else
+    {
+        /* When the netif link is down this function must be called */
+        netif_set_down(&gnetif);
+    }
 
-  /* Start DHCP negotiation for a network interface (IPv4) */
-  dhcp_start(&gnetif);
+    /* Start DHCP negotiation for a network interface (IPv4) */
+    dhcp_start(&gnetif);
 
 /* USER CODE BEGIN 3 */
 
@@ -135,7 +140,7 @@ sio_fd_t sio_open(u8_t devnum)
 /* USER CODE BEGIN 7 */
   sd = 0; // dummy code
 /* USER CODE END 7 */
-	
+
   return sd;
 }
 

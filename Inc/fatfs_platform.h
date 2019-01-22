@@ -46,9 +46,9 @@
   ******************************************************************************
 */
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f7xx_hal.h"           
+#include "stm32f7xx_hal.h"
 /* Defines ------------------------------------------------------------------*/
 #define SD_PIN                   GPIO_PIN_13
 #define SD_PORT                  GPIOC
 /* Prototypes ---------------------------------------------------------------*/
-uint8_t	BSP_PlatformIsDetected(void);
+uint8_t BSP_PlatformIsDetected(void);

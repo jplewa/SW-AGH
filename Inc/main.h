@@ -396,7 +396,7 @@
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 void _Error_Handler(char *, int);
 

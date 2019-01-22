@@ -55,7 +55,7 @@
 #include <string.h>
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -97,43 +97,43 @@
 */
 /*----------   -----------*/
 #define USBH_MAX_NUM_ENDPOINTS      2
- 
+
 /*----------   -----------*/
 #define USBH_MAX_NUM_INTERFACES      2
- 
+
 /*----------   -----------*/
 #define USBH_MAX_NUM_CONFIGURATION      1
- 
+
 /*----------   -----------*/
 #define USBH_KEEP_CFG_DESCRIPTOR      1
- 
+
 /*----------   -----------*/
 #define USBH_MAX_NUM_SUPPORTED_CLASS      1
- 
+
 /*----------   -----------*/
 #define USBH_MAX_SIZE_CONFIGURATION      256
- 
+
 /*----------   -----------*/
 #define USBH_MAX_DATA_BUFFER      512
- 
+
 /*----------   -----------*/
 #define USBH_DEBUG_LEVEL      3
- 
+
 /*----------   -----------*/
 #define USBH_USE_OS      1
- 
- 
- 
+
+
+
 
 /****************************************/
 /* #define for FS and HS identification */
-#define HOST_HS 		0
-#define HOST_FS 		1
+#define HOST_HS        0
+#define HOST_FS        1
 
 #if (USBH_USE_OS == 1)
-  #include "cmsis_os.h"
-  #define USBH_PROCESS_PRIO          osPriorityNormal
-  #define USBH_PROCESS_STACK_SIZE    ((uint16_t)128)
+#include "cmsis_os.h"
+#define USBH_PROCESS_PRIO          osPriorityNormal
+#define USBH_PROCESS_STACK_SIZE    ((uint16_t)128)
 #endif /* (USBH_USE_OS == 1) */
 
 /**

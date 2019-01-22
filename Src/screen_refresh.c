@@ -1,5 +1,4 @@
 #include "screen_refresh.h"
-#include "mp3audio.h"
 
 int lcd_start(void)
 {
@@ -10,8 +9,8 @@ int lcd_start(void)
     }
 
     /* LCD Initialization */
-    BSP_LCD_LayerDefaultInit(0, (unsigned int)0xC0000000);
-    BSP_LCD_LayerDefaultInit(1, (unsigned int)0xC0000000 + (LCD_X_SIZE * LCD_Y_SIZE * 4));
+    BSP_LCD_LayerDefaultInit(0, (unsigned int) 0xC0000000);
+    BSP_LCD_LayerDefaultInit(1, (unsigned int) 0xC0000000 + (LCD_X_SIZE * LCD_Y_SIZE * 4));
 
     /* Enable the LCD */
     BSP_LCD_DisplayOn();
@@ -51,13 +50,25 @@ int initialize_touchscreen(void)
     return 0;
 }
 
+int pressed_in_Y_axis(int center, int radius)
+{
+    return (TS_State.touchY[0] < center + radius)
+        && (TS_State.touchY[0] > center - radius);
+}
+
+int pressed_in_X_axis(int center, int radius)
+{
+    return (TS_State.touchX[0] < center + radius)
+        && (TS_State.touchX[0] > center - radius);
+}
+
 void start_touch_task(void *argument)
 {
     if (lcd_start() || initialize_touchscreen())
     {
-        while(1) {}
+        while (1) {}
     }
-    
+
     draw_background();
 
     player_state = STOPPED;
@@ -72,13 +83,13 @@ void start_touch_task(void *argument)
         vTaskDelay(200);
         if (BSP_TS_GetState(&TS_State) != TS_OK)
         {
-            while(1) {}
+            while (1) {}
         }
         if (TS_State.touchDetected)
         {
-            if ((TS_State.touchY[0] < big_button_Y + big_button_radius) && (TS_State.touchY[0] > big_button_Y - big_button_radius))
+            if (pressed_in_Y_axis(big_button_Y, big_button_radius))
             {
-                if ((TS_State.touchX[0] < play_button_X + big_button_radius) && (TS_State.touchX[0] > play_button_X - big_button_radius))
+                if (pressed_in_X_axis(play_button_X, big_button_radius))
                 {
                     switch (player_state)
                     {
@@ -100,18 +111,16 @@ void start_touch_task(void *argument)
                         default:
                             break;
                     }
-                }
-                else if ((TS_State.touchX[0] < stop_button_X + big_button_radius) && (TS_State.touchX[0] > stop_button_X - big_button_radius))
+                } else if (pressed_in_X_axis(stop_button_X, big_button_radius))
                 {
-                    if ((player_state == PLAYING) || (player_state == STOPPED))
+                    if (player_state == PLAYING)
                     {
                         player_state = STOP_PRESSED;
                         draw_play_button();
                     }
-                }
-                else if ((TS_State.touchY[0] < medium_button_Y + medium_button_radius) && (TS_State.touchY[0] > medium_button_Y - medium_button_radius))
+                } else if (pressed_in_Y_axis(medium_button_Y, medium_button_radius))
                 {
-                    if ((TS_State.touchX[0] < skip_left_X + medium_button_radius) && (TS_State.touchX[0] > skip_left_X - medium_button_radius))
+                    if (pressed_in_X_axis(skip_left_X, medium_button_radius))
                     {
                         switch (player_state)
                         {
@@ -134,7 +143,7 @@ void start_touch_task(void *argument)
                                 break;
                         }
                     }
-                    if ((TS_State.touchX[0] < skip_right_X + medium_button_radius) && (TS_State.touchX[0] > skip_right_X - medium_button_radius))
+                    if (pressed_in_X_axis(skip_right_X, medium_button_radius))
                     {
                         switch (player_state)
                         {
@@ -158,17 +167,15 @@ void start_touch_task(void *argument)
                         }
                     }
                 }
-            }
-            else if ((TS_State.touchY[0] < small_button_Y + small_button_radius) && (TS_State.touchY[0] > small_button_Y - small_button_radius))
+            } else if (pressed_in_Y_axis(small_button_Y, small_button_radius))
             {
                 if (player_state == PLAYING)
                 {
-                    if ((TS_State.touchX[0] < minus_button_X + small_button_radius) && (TS_State.touchX[0] > minus_button_X - small_button_radius))
+                    if (pressed_in_X_axis(minus_button_X, small_button_radius))
                     {
                         player_state = VOL_DOWN_PRESSED;
                         draw_volume(volume);
-                    }
-                    else if ((TS_State.touchX[0] < plus_button_X + small_button_radius) && (TS_State.touchX[0] > plus_button_X - small_button_radius))
+                    } else if (pressed_in_X_axis(plus_button_X, small_button_radius))
                     {
                         player_state = VOL_UP_PRESSED;
                         draw_volume(volume);

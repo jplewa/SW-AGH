@@ -52,7 +52,7 @@
 #define __USB_HOST__H__
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
@@ -82,12 +82,13 @@
   */
 
 /** Status of the application. */
-typedef enum {
+typedef enum
+{
   APPLICATION_IDLE = 0,
   APPLICATION_START,
   APPLICATION_READY,
   APPLICATION_DISCONNECT
-}ApplicationTypeDef;
+} ApplicationTypeDef;
 
 /** @defgroup USBH_HOST_Exported_FunctionsPrototype USBH_HOST_Exported_FunctionsPrototype
   * @brief Declaration of public functions for Usb host.

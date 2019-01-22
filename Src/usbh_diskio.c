@@ -45,9 +45,9 @@
   *
   ******************************************************************************
   */
-/* USER CODE BEGIN firstSection */ 
+/* USER CODE BEGIN firstSection */
 /* can be used to modify / undefine following code or add new definitions */
-/* USER CODE END firstSection */ 
+/* USER CODE END firstSection */
 
 /* Includes ------------------------------------------------------------------*/
 #include "ff_gen_drv.h"
@@ -59,33 +59,33 @@
 #define USB_DEFAULT_BLOCK_SIZE 512
 
 /* Private variables ---------------------------------------------------------*/
-extern USBH_HandleTypeDef  hUSB_Host;
+extern USBH_HandleTypeDef hUSB_Host;
 
 /* Private function prototypes -----------------------------------------------*/
-DSTATUS USBH_initialize (BYTE);
-DSTATUS USBH_status (BYTE);
-DRESULT USBH_read (BYTE, BYTE*, DWORD, UINT);
+DSTATUS USBH_initialize(BYTE);
+DSTATUS USBH_status(BYTE);
+DRESULT USBH_read(BYTE, BYTE *, DWORD, UINT);
 
 #if _USE_WRITE == 1
-  DRESULT USBH_write (BYTE, const BYTE*, DWORD, UINT);
+DRESULT USBH_write (BYTE, const BYTE*, DWORD, UINT);
 #endif /* _USE_WRITE == 1 */
 
 #if _USE_IOCTL == 1
-  DRESULT USBH_ioctl (BYTE, BYTE, void*);
+DRESULT USBH_ioctl (BYTE, BYTE, void*);
 #endif /* _USE_IOCTL == 1 */
 
-const Diskio_drvTypeDef  USBH_Driver =
-{
-  USBH_initialize,
-  USBH_status,
-  USBH_read,
+const Diskio_drvTypeDef USBH_Driver =
+    {
+        USBH_initialize,
+        USBH_status,
+        USBH_read,
 #if  _USE_WRITE == 1
-  USBH_write,
+        USBH_write,
 #endif /* _USE_WRITE == 1 */
 #if  _USE_IOCTL == 1
-  USBH_ioctl,
+        USBH_ioctl,
 #endif /* _USE_IOCTL == 1 */
-};
+    };
 
 /* USER CODE BEGIN beforeFunctionSection */
 /* can be used to modify / undefine following code or add new code */
@@ -100,9 +100,9 @@ const Diskio_drvTypeDef  USBH_Driver =
   */
 DSTATUS USBH_initialize(BYTE lun)
 {
-  /* CAUTION : USB Host library has to be initialized in the application */
+    /* CAUTION : USB Host library has to be initialized in the application */
 
-  return RES_OK;
+    return RES_OK;
 }
 
 /**
@@ -112,18 +112,17 @@ DSTATUS USBH_initialize(BYTE lun)
   */
 DSTATUS USBH_status(BYTE lun)
 {
-  DRESULT res = RES_ERROR;
+    DRESULT res = RES_ERROR;
 
-  if(USBH_MSC_UnitIsReady(&hUSB_Host, lun))
-  {
-    res = RES_OK;
-  }
-  else
-  {
-    res = RES_ERROR;
-  }
+    if (USBH_MSC_UnitIsReady(&hUSB_Host, lun))
+    {
+        res = RES_OK;
+    } else
+    {
+        res = RES_ERROR;
+    }
 
-  return res;
+    return res;
 }
 
 /* USER CODE BEGIN beforeReadSection */
@@ -140,33 +139,32 @@ DSTATUS USBH_status(BYTE lun)
   */
 DRESULT USBH_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 {
-  DRESULT res = RES_ERROR;
-  MSC_LUNTypeDef info;
+    DRESULT res = RES_ERROR;
+    MSC_LUNTypeDef info;
 
-  if(USBH_MSC_Read(&hUSB_Host, lun, sector, buff, count) == USBH_OK)
-  {
-    res = RES_OK;
-  }
-  else
-  {
-    USBH_MSC_GetLUNInfo(&hUSB_Host, lun, &info);
-
-    switch (info.sense.asc)
+    if (USBH_MSC_Read(&hUSB_Host, lun, sector, buff, count) == USBH_OK)
     {
-    case SCSI_ASC_LOGICAL_UNIT_NOT_READY:
-    case SCSI_ASC_MEDIUM_NOT_PRESENT:
-    case SCSI_ASC_NOT_READY_TO_READY_CHANGE:
-      USBH_ErrLog ("USB Disk is not ready!");
-      res = RES_NOTRDY;
-      break; 
+        res = RES_OK;
+    } else
+    {
+        USBH_MSC_GetLUNInfo(&hUSB_Host, lun, &info);
 
-    default:
-      res = RES_ERROR;
-      break;
+        switch (info.sense.asc)
+        {
+            case SCSI_ASC_LOGICAL_UNIT_NOT_READY:
+            case SCSI_ASC_MEDIUM_NOT_PRESENT:
+            case SCSI_ASC_NOT_READY_TO_READY_CHANGE:
+                USBH_ErrLog("USB Disk is not ready!");
+                res = RES_NOTRDY;
+                break;
+
+            default:
+                res = RES_ERROR;
+                break;
+        }
     }
-  }
 
-  return res;
+    return res;
 }
 
 /* USER CODE BEGIN beforeWriteSection */
@@ -291,7 +289,7 @@ DRESULT USBH_ioctl(BYTE lun, BYTE cmd, void *buff)
 }
 #endif /* _USE_IOCTL == 1 */
 
-/* USER CODE BEGIN lastSection */ 
+/* USER CODE BEGIN lastSection */
 /* can be used to modify / undefine previous code or add new code */
 /* USER CODE END lastSection */
 

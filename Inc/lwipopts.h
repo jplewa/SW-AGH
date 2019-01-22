@@ -47,7 +47,7 @@
   *
   ******************************************************************************
   */
- 
+
 /* Define to prevent recursive inclusion --------------------------------------*/
 #ifndef __LWIPOPTS__H__
 #define __LWIPOPTS__H__
@@ -64,7 +64,7 @@
 /* USER CODE END 0 */
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 /* STM32CubeMX Specific Parameters (not defined in opt.h) ---------------------*/

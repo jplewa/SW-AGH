@@ -44,7 +44,7 @@
   * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
-  */ 
+  */
 /* USER CODE BEGIN firstSection */
 /* can be used to modify / undefine following code or add new definitions */
 /* USER CODE END firstSection*/
@@ -95,29 +95,29 @@ static volatile DSTATUS Stat = STA_NOINIT;
 static osMessageQId SDQueueID;
 /* Private function prototypes -----------------------------------------------*/
 static DSTATUS SD_CheckStatus(BYTE lun);
-DSTATUS SD_initialize (BYTE);
-DSTATUS SD_status (BYTE);
-DRESULT SD_read (BYTE, BYTE*, DWORD, UINT);
+DSTATUS SD_initialize(BYTE);
+DSTATUS SD_status(BYTE);
+DRESULT SD_read(BYTE, BYTE *, DWORD, UINT);
 #if _USE_WRITE == 1
-  DRESULT SD_write (BYTE, const BYTE*, DWORD, UINT);
+DRESULT SD_write (BYTE, const BYTE*, DWORD, UINT);
 #endif /* _USE_WRITE == 1 */
 #if _USE_IOCTL == 1
-  DRESULT SD_ioctl (BYTE, BYTE, void*);
+DRESULT SD_ioctl (BYTE, BYTE, void*);
 #endif  /* _USE_IOCTL == 1 */
 
-const Diskio_drvTypeDef  SD_Driver =
-{
-  SD_initialize,
-  SD_status,
-  SD_read,
+const Diskio_drvTypeDef SD_Driver =
+    {
+        SD_initialize,
+        SD_status,
+        SD_read,
 #if  _USE_WRITE == 1
-  SD_write,
+        SD_write,
 #endif /* _USE_WRITE == 1 */
 
 #if  _USE_IOCTL == 1
-  SD_ioctl,
+        SD_ioctl,
 #endif /* _USE_IOCTL == 1 */
-};
+    };
 
 /* USER CODE BEGIN beforeFunctionSection */
 /* can be used to modify / undefine following code or add new code */
@@ -126,14 +126,14 @@ const Diskio_drvTypeDef  SD_Driver =
 /* Private functions ---------------------------------------------------------*/
 static DSTATUS SD_CheckStatus(BYTE lun)
 {
-  Stat = STA_NOINIT;
+    Stat = STA_NOINIT;
 
-  if(BSP_SD_GetCardState() == MSD_OK)
-  {
-    Stat &= ~STA_NOINIT;
-  }
+    if (BSP_SD_GetCardState() == MSD_OK)
+    {
+        Stat &= ~STA_NOINIT;
+    }
 
-  return Stat;
+    return Stat;
 }
 
 /**
@@ -143,35 +143,35 @@ static DSTATUS SD_CheckStatus(BYTE lun)
   */
 DSTATUS SD_initialize(BYTE lun)
 {
-  Stat = STA_NOINIT;
-  /*
-   * check that the kernel has been started before continuing
-   * as the osMessage API will fail otherwise
-   */
-  if(osKernelRunning())
-  {
+    Stat = STA_NOINIT;
+    /*
+     * check that the kernel has been started before continuing
+     * as the osMessage API will fail otherwise
+     */
+    if (osKernelRunning())
+    {
 #if !defined(DISABLE_SD_INIT)
 
-    if(BSP_SD_Init() == MSD_OK)
-    {
-      Stat = SD_CheckStatus(lun);
-    }
+        if (BSP_SD_Init() == MSD_OK)
+        {
+            Stat = SD_CheckStatus(lun);
+        }
 
 #else
-    Stat = SD_CheckStatus(lun);
+        Stat = SD_CheckStatus(lun);
 #endif
 
-    /*
-     * if the SD is correctly initialized, create the operation queue
-     */
+        /*
+         * if the SD is correctly initialized, create the operation queue
+         */
 
-    if (Stat != STA_NOINIT)
-    {
-      osMessageQDef(SD_Queue, QUEUE_SIZE, uint16_t);
-      SDQueueID = osMessageCreate (osMessageQ(SD_Queue), NULL);
+        if (Stat != STA_NOINIT)
+        {
+            osMessageQDef(SD_Queue, QUEUE_SIZE, uint16_t);
+            SDQueueID = osMessageCreate(osMessageQ(SD_Queue), NULL);
+        }
     }
-  }
-  return Stat;
+    return Stat;
 }
 
 /**
@@ -181,7 +181,7 @@ DSTATUS SD_initialize(BYTE lun)
   */
 DSTATUS SD_status(BYTE lun)
 {
-  return SD_CheckStatus(lun);
+    return SD_CheckStatus(lun);
 }
 
 /* USER CODE BEGIN beforeReadSection */
@@ -197,47 +197,47 @@ DSTATUS SD_status(BYTE lun)
   */
 DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 {
-  DRESULT res = RES_ERROR;
-  osEvent event;
-  uint32_t timer;
+    DRESULT res = RES_ERROR;
+    osEvent event;
+    uint32_t timer;
 #if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
-  uint32_t alignedAddr;
+    uint32_t alignedAddr;
 #endif
 
-  if(BSP_SD_ReadBlocks_DMA((uint32_t*)buff,
-                           (uint32_t) (sector),
-                           count) == MSD_OK)
-  {
-    /* wait for a message from the queue or a timeout */
-    event = osMessageGet(SDQueueID, SD_TIMEOUT);
-
-    if (event.status == osEventMessage)
+    if (BSP_SD_ReadBlocks_DMA((uint32_t *) buff,
+                              (uint32_t)(sector),
+                              count) == MSD_OK)
     {
-      if (event.value.v == READ_CPLT_MSG)
-      {
-        timer = osKernelSysTick() + SD_TIMEOUT;
-        /* block until SDIO IP is ready or a timeout occur */
-        while(timer > osKernelSysTick())
-        {
-          if (BSP_SD_GetCardState() == SD_TRANSFER_OK)
-          {
-            res = RES_OK;
-#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
-            /*
-               the SCB_InvalidateDCache_by_Addr() requires a 32-Byte aligned address,
-               adjust the address and the D-Cache size to invalidate accordingly.
-             */
-            alignedAddr = (uint32_t)buff & ~0x1F;
-            SCB_InvalidateDCache_by_Addr((uint32_t*)alignedAddr, count*BLOCKSIZE + ((uint32_t)buff - alignedAddr));
-#endif
-            break;
-          }
-        }
-      }
-    }
-  }
+        /* wait for a message from the queue or a timeout */
+        event = osMessageGet(SDQueueID, SD_TIMEOUT);
 
-  return res;
+        if (event.status == osEventMessage)
+        {
+            if (event.value.v == READ_CPLT_MSG)
+            {
+                timer = osKernelSysTick() + SD_TIMEOUT;
+                /* block until SDIO IP is ready or a timeout occur */
+                while (timer > osKernelSysTick())
+                {
+                    if (BSP_SD_GetCardState() == SD_TRANSFER_OK)
+                    {
+                        res = RES_OK;
+#if (ENABLE_SD_DMA_CACHE_MAINTENANCE == 1)
+                        /*
+                           the SCB_InvalidateDCache_by_Addr() requires a 32-Byte aligned address,
+                           adjust the address and the D-Cache size to invalidate accordingly.
+                         */
+                        alignedAddr = (uint32_t)buff & ~0x1F;
+                        SCB_InvalidateDCache_by_Addr((uint32_t*)alignedAddr, count*BLOCKSIZE + ((uint32_t)buff - alignedAddr));
+#endif
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return res;
 }
 
 /* USER CODE BEGIN beforeWriteSection */
@@ -354,7 +354,7 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 /* can be used to modify previous code / undefine following code / add new code */
 /* USER CODE END afterIoctlSection */
 
-/* USER CODE BEGIN callbackSection */ 
+/* USER CODE BEGIN callbackSection */
 /* can be used to modify / following code or add new code */
 /* USER CODE END callbackSection */
 /**
@@ -363,21 +363,21 @@ DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
   * @retval None
   */
 
- /*
-   ===============================================================================
-    Select the correct function signature depending on your platform.
-    please refer to the file "stm32xxxx_eval_sd.h" to verify the correct function
-    prototype
-   ===============================================================================
-  */
+/*
+  ===============================================================================
+   Select the correct function signature depending on your platform.
+   please refer to the file "stm32xxxx_eval_sd.h" to verify the correct function
+   prototype
+  ===============================================================================
+ */
 //void BSP_SD_WriteCpltCallback(uint32_t SdCard)
 void BSP_SD_WriteCpltCallback(void)
 {
-  /*
-   * No need to add an "osKernelRunning()" check here, as the SD_initialize()
-   * is always called before any SD_Read()/SD_Write() call
-   */
-  osMessagePut(SDQueueID, WRITE_CPLT_MSG, osWaitForever);
+    /*
+     * No need to add an "osKernelRunning()" check here, as the SD_initialize()
+     * is always called before any SD_Read()/SD_Write() call
+     */
+    osMessagePut(SDQueueID, WRITE_CPLT_MSG, osWaitForever);
 }
 
 /**
@@ -386,24 +386,24 @@ void BSP_SD_WriteCpltCallback(void)
   * @retval None
   */
 
-  /*
-   ===============================================================================
-    Select the correct function signature depending on your platform.
-    please refer to the file "stm32xxxx_eval_sd.h" to verify the correct function
-    prototype
-   ===============================================================================
-  */
+/*
+ ===============================================================================
+  Select the correct function signature depending on your platform.
+  please refer to the file "stm32xxxx_eval_sd.h" to verify the correct function
+  prototype
+ ===============================================================================
+*/
 //void BSP_SD_ReadCpltCallback(uint32_t SdCard)
 void BSP_SD_ReadCpltCallback(void)
 {
-  /*
-   * No need to add an "osKernelRunning()" check here, as the SD_initialize()
-   * is always called before any SD_Read()/SD_Write() call
-   */
-  osMessagePut(SDQueueID, READ_CPLT_MSG, osWaitForever);
+    /*
+     * No need to add an "osKernelRunning()" check here, as the SD_initialize()
+     * is always called before any SD_Read()/SD_Write() call
+     */
+    osMessagePut(SDQueueID, READ_CPLT_MSG, osWaitForever);
 }
 
-/* USER CODE BEGIN lastSection */ 
+/* USER CODE BEGIN lastSection */
 /* can be used to modify / undefine previous code or add new code */
 /* USER CODE END lastSection */
 

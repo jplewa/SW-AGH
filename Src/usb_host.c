@@ -96,49 +96,49 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
   */
 void MX_USB_HOST_Init(void)
 {
-  /* USER CODE BEGIN USB_HOST_Init_PreTreatment */
-  
-  /* USER CODE END USB_HOST_Init_PreTreatment */
-  
-  /* Init host Library, add supported class and start the library. */
-  USBH_Init(&hUsbHostFS, USBH_UserProcess, HOST_FS);
+    /* USER CODE BEGIN USB_HOST_Init_PreTreatment */
 
-  USBH_RegisterClass(&hUsbHostFS, USBH_MSC_CLASS);
+    /* USER CODE END USB_HOST_Init_PreTreatment */
 
-  USBH_Start(&hUsbHostFS);
+    /* Init host Library, add supported class and start the library. */
+    USBH_Init(&hUsbHostFS, USBH_UserProcess, HOST_FS);
 
-  /* USER CODE BEGIN USB_HOST_Init_PostTreatment */
-  
-  /* USER CODE END USB_HOST_Init_PostTreatment */
+    USBH_RegisterClass(&hUsbHostFS, USBH_MSC_CLASS);
+
+    USBH_Start(&hUsbHostFS);
+
+    /* USER CODE BEGIN USB_HOST_Init_PostTreatment */
+
+    /* USER CODE END USB_HOST_Init_PostTreatment */
 }
 
 /*
  * user callback definition
  */
-static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
+static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
 {
-  /* USER CODE BEGIN CALL_BACK_1 */
-  switch(id)
-  {
-  case HOST_USER_SELECT_CONFIGURATION:
-  break;
+    /* USER CODE BEGIN CALL_BACK_1 */
+    switch (id)
+    {
+        case HOST_USER_SELECT_CONFIGURATION:
+            break;
 
-  case HOST_USER_DISCONNECTION:
-  Appli_state = APPLICATION_DISCONNECT;
-  break;
+        case HOST_USER_DISCONNECTION:
+            Appli_state = APPLICATION_DISCONNECT;
+            break;
 
-  case HOST_USER_CLASS_ACTIVE:
-  Appli_state = APPLICATION_READY;
-  break;
+        case HOST_USER_CLASS_ACTIVE:
+            Appli_state = APPLICATION_READY;
+            break;
 
-  case HOST_USER_CONNECTION:
-  Appli_state = APPLICATION_START;
-  break;
+        case HOST_USER_CONNECTION:
+            Appli_state = APPLICATION_START;
+            break;
 
-  default:
-  break;
-  }
-  /* USER CODE END CALL_BACK_1 */
+        default:
+            break;
+    }
+    /* USER CODE END CALL_BACK_1 */
 }
 
 /**

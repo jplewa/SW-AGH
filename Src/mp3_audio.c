@@ -1,4 +1,4 @@
-#include "mp3audio.h"
+#include "mp3_audio.h"
 
 int init_mp3()
 {
@@ -6,7 +6,10 @@ int init_mp3()
 
     volume = 30;
 
-    if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_HEADPHONE1, volume, AUDIO_FREQUENCY_44K) != AUDIO_OK)
+    if (BSP_AUDIO_OUT_Init(OUTPUT_DEVICE_HEADPHONE1,
+                           volume,
+                           AUDIO_FREQUENCY_44K)
+        != AUDIO_OK)
     {
         xprintf("ERROR: Failed to configure the audio peripherals\n");
         return -1;
@@ -49,7 +52,8 @@ int read_directory(char *path)
     {
         for (int i = 0; fno.fname[i] != '\0'; i++)
         {
-            if ((fno.fname[i] == '.') && (fno.fname[i + 1] == 'm') && (fno.fname[i + 2] == 'p') && (fno.fname[i + 3] == '3'))
+            if ((fno.fname[i] == '.') && (fno.fname[i + 1] == 'm')
+                && (fno.fname[i + 2] == 'p') && (fno.fname[i + 3] == '3'))
             {
                 memset(FILES[FILE_COUNTER], 0, FILE_NAME_LENGTH);
                 snprintf(FILES[FILE_COUNTER], (i + 8), "%s%s", path, fno.fname);
@@ -58,13 +62,11 @@ int read_directory(char *path)
                     if (f_close(&file) == FR_OK)
                     {
                         FILE_COUNTER++;
-                    }
-                    else
+                    } else
                     {
                         memset(FILES[FILE_COUNTER], 0, FILE_NAME_LENGTH);
                     }
-                }
-                else
+                } else
                 {
                     memset(FILES[FILE_COUNTER], 0, FILE_NAME_LENGTH);
                 }
@@ -86,7 +88,7 @@ int process_callback(int dma_offset)
 
     while (processing_buff_offs < DMA_BUFFER_SIZE / 4)
     {
-        offset = MP3FindSyncWord((unsigned char *)file_buff_ptr, bytes_left);
+        offset = MP3FindSyncWord((unsigned char *) file_buff_ptr, bytes_left);
         if (offset == -1)
         {
             bytes_left = 0;
@@ -94,7 +96,11 @@ int process_callback(int dma_offset)
         }
         bytes_left -= offset;
         file_buff_ptr += offset;
-        if (MP3Decode(hMP3Decoder, (unsigned char **)&file_buff_ptr, (int *)&bytes_left, processing_buff_ptr, 0))
+        if (MP3Decode(hMP3Decoder,
+                      (unsigned char **) &file_buff_ptr,
+                      (int *) &bytes_left,
+                      processing_buff_ptr,
+                      0))
         {
             xprintf("ERROR: Failed to decode the next frame\n");
             return -1;
@@ -106,11 +112,16 @@ int process_callback(int dma_offset)
 
     memcpy(dma_buff + dma_offset, processing_buff, DMA_BUFFER_SIZE / 2);
     memcpy(file_buff, file_buff_ptr, bytes_left);
-    memcpy(processing_buff, &processing_buff[DMA_BUFFER_SIZE / 4], (processing_buff_offs - DMA_BUFFER_SIZE / 4) * 2);
+    memcpy(processing_buff,
+           &processing_buff[DMA_BUFFER_SIZE / 4],
+           (processing_buff_offs - DMA_BUFFER_SIZE / 4) * 2);
 
     file_buff_ptr = file_buff + bytes_left;
 
-    if (f_read(&file, file_buff_ptr, (FILE_BUFFER_SIZE - bytes_left), (void *)&bytes_read) != F_OK)
+    if (f_read(&file,
+               file_buff_ptr,
+               (FILE_BUFFER_SIZE - bytes_left),
+               (void *) &bytes_read) != F_OK)
     {
         xprintf("ERROR: Failed to read from file\n");
         return -1;
@@ -133,7 +144,7 @@ int next_file()
 int prev_file()
 {
     int file_number = CURRENT_FILE - 1;
-    if (file_number < 0) 
+    if (file_number < 0)
     {
         file_number += FILE_COUNTER;
     }
@@ -150,7 +161,8 @@ int start_reading_file()
 
     file_buff_ptr = file_buff;
 
-    if (f_read(&file, file_buff_ptr, FILE_BUFFER_SIZE, (void *)&bytes_left) != F_OK)
+    if (f_read(&file, file_buff_ptr, FILE_BUFFER_SIZE, (void *) &bytes_left)
+        != F_OK)
     {
         xprintf("ERROR: Failed to read from file %s\n", FILES[CURRENT_FILE]);
         return -1;
@@ -161,7 +173,8 @@ int start_reading_file()
 
     dma_buff_offs = BUFFER_OFFSET_NONE;
 
-    if (BSP_AUDIO_OUT_Play((uint16_t *)&dma_buff[0], DMA_BUFFER_SIZE) != AUDIO_OK)
+    if (BSP_AUDIO_OUT_Play((uint16_t * ) & dma_buff[0], DMA_BUFFER_SIZE)
+        != AUDIO_OK)
     {
         xprintf("ERROR: Failed to start the audio stream\n");
         return -1;
@@ -332,14 +345,14 @@ int volume_down()
 void play_directory()
 {
     int err = 0;
-    
+
     err = start_reading_file();
-    
+
     if (err)
     {
         return;
     }
-    
+
     redraw_title = 1;
 
     vTaskDelay(2);
@@ -404,7 +417,7 @@ void play_directory()
                 break;
 
             case PREV_PRESSED_STOPPED:
-                FILE_COUNTER = prev_file();
+                CURRENT_FILE = prev_file();
                 player_state = STOPPED;
                 redraw_title = 1;
                 break;

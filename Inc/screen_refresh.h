@@ -12,28 +12,28 @@
 #include <sys/unistd.h>
 #include "usb_host.h"
 #include "stm32f7xx_hal.h"
-#include "mp3audio.h"
+#include "mp3_audio.h"
 
 TS_StateTypeDef TS_State;
 
 /* player state enum */
 typedef enum
 {
-    STOP_PRESSED,
-    STOPPED,
-    PLAY_PRESSED,
-    PLAYING,
-    PAUSE_PRESSED,
-    PAUSED,
-    RESUME_PRESSED,
-    PREV_PRESSED_PLAYING,
-    NEXT_PRESSED_PLAYING,
-    PREV_PRESSED_STOPPED,
-    NEXT_PRESSED_STOPPED,
-    PREV_PRESSED_PAUSED,
-    NEXT_PRESSED_PAUSED,
-    VOL_UP_PRESSED,
-    VOL_DOWN_PRESSED,
+  STOP_PRESSED,
+  STOPPED,
+  PLAY_PRESSED,
+  PLAYING,
+  PAUSE_PRESSED,
+  PAUSED,
+  RESUME_PRESSED,
+  PREV_PRESSED_PLAYING,
+  NEXT_PRESSED_PLAYING,
+  PREV_PRESSED_STOPPED,
+  NEXT_PRESSED_STOPPED,
+  PREV_PRESSED_PAUSED,
+  NEXT_PRESSED_PAUSED,
+  VOL_UP_PRESSED,
+  VOL_DOWN_PRESSED,
 } player_states;
 
 /* GUI <-> audio processing communication */
