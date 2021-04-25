@@ -1,9 +1,9 @@
-# Systemy wbudowane - projekt inżynierski
+# Embedded Systems - project
 
-## Dokumentacja
+## Documentation
 
-Dokumentacja projektu znajduje się [w repozytorium](Docs/Dokumentacja.pdf).
+The docs (in Polish) can be found in [here](Docs/Dokumentacja.pdf).
 
-## Filmik na temat realizacji projektu
+## Video documentation (also in Polish)
 
-[![Link do filmu na YouTubie](https://i.imgur.com/p8BPbzF.png)](https://youtu.be/EJTvrkK61sc "Link do filmu na YouTubie")
+[![YouTube link](https://i.imgur.com/p8BPbzF.png)](https://youtu.be/EJTvrkK61sc "YouTube link")
